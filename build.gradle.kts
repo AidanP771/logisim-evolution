@@ -801,8 +801,9 @@ tasks.register("createApp") {
         "--app-version", appVersion,
         "--type", "app-image",
         "--mac-app-category", "education",
-        // UX fork: trackpad pinch zoom (see fork/nav/PinchZoom).
-        "--java-options", MACOS_GESTURE_EXPORT
+        // UX fork: trackpad pinch zoom (see fork/nav/PinchZoom). A literal, not MACOS_GESTURE_EXPORT:
+        // doLast blocks must not reference script-level values (configuration cache).
+        "--java-options", "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
     )
     func.runCommand(params, "Error while creating the .app directory.")
 
