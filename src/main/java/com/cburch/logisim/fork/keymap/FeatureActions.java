@@ -9,6 +9,12 @@
 
 package com.cburch.logisim.fork.keymap;
 
+import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.gui.CheatSheet;
+import com.cburch.logisim.fork.keymap.ForkAction.Category;
+import com.cburch.logisim.fork.keymap.ForkAction.Scope;
+import java.util.List;
+
 /**
  * Registers the actions of the palette, help, arrange and wiring features. Kept apart from
  * {@link ForkActions} so that registry does not depend on every feature package at class-load time.
@@ -22,6 +28,8 @@ final class FeatureActions {
     if (registered) return;
     registered = true;
 
-    // Feature packages register their actions here.
+    // --- Help (window-wide) --------------------------------------------------
+    ForkActions.register("help.cheatSheet", Category.HELP, Scope.WINDOW,
+        ForkPreferences.CHEAT_SHEET, List.of("?"), ctx -> true, ctx -> CheatSheet.show(ctx.frame()));
   }
 }
