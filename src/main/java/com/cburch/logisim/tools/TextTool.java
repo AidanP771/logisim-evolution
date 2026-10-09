@@ -207,6 +207,11 @@ public class TextTool extends Tool implements PropertyChangeListener {
     return TextTool.class.hashCode();
   }
 
+  /** Whether a text caret is open and taking keystrokes. */
+  public boolean isEditing() {
+    return caret != null;
+  }
+
   @Override
   public void keyPressed(Canvas canvas, KeyEvent e) {
     if (caret != null) {

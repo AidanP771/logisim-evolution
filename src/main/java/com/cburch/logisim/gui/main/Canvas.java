@@ -32,6 +32,7 @@ import com.cburch.logisim.file.LibraryEvent;
 import com.cburch.logisim.file.LibraryListener;
 import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.file.MouseMappings;
+import com.cburch.logisim.fork.nav.CanvasNavigator;
 import com.cburch.logisim.file.Options;
 import com.cburch.logisim.gui.generic.CanvasPane;
 import com.cburch.logisim.gui.generic.CanvasPaneContents;
@@ -109,6 +110,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
   private final Project proj;
   private final Selection selection;
   private final MyListener myListener = new MyListener();
+  private final CanvasNavigator navigator;
   private final MyViewport viewport = new MyViewport();
   private final MyProjectListener myProjectListener = new MyProjectListener();
   private final TickCounter tickCounter;
@@ -157,6 +159,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     AppPreferences.SHOW_TICK_RATE.addPropertyChangeListener(myListener);
     AppPreferences.CANVAS_BG_COLOR.addPropertyChangeListener(myListener);
     loadOptions(options);
+    navigator = new CanvasNavigator(this);
   }
 
   public static boolean autoZoomButtonClicked(final Dimension sz,
@@ -838,6 +841,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     //
     @Override
     public void keyPressed(KeyEvent e) {
+      if (navigator.keyPressed(e)) return;
       if (e.isControlDown()) { // If CTRL is pressed, check for + or -
         final var ml = Canvas.this.getMousePosition(); // Determine mouse location
         if (ml != null) { // Handle the Cursor not being on the component
@@ -867,6 +871,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void keyReleased(KeyEvent e) {
+      if (navigator.keyReleased(e)) return;
       final var tool = proj.getTool();
       if (tool != null) {
         tool.keyReleased(Canvas.this, e);
@@ -891,6 +896,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseDragged(MouseEvent e) {
+      if (navigator.mouseDragged(e)) return;
       if (dragTool != null) {
         dragTool.mouseDragged(Canvas.this, getGraphics(), e);
         final var zoomModel = proj.getFrame().getZoomModel();
@@ -943,6 +949,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mousePressed(MouseEvent e) {
+      if (navigator.mousePressed(e)) return;
       int button = e.getButton();
       if (button >= 4 && button <= 7) {
         if (canvasPane != null) {
@@ -986,6 +993,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseReleased(MouseEvent e) {
+      if (navigator.mouseReleased(e)) return;
       if ((e.getButton() == MouseEvent.BUTTON1
               && viewport.zoomButtonVisible
               && autoZoomButtonClicked(
@@ -1016,6 +1024,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent mwe) {
+      if (navigator.mouseWheelMoved(mwe)) return;
       final var tool = proj.getTool();
       if (mwe.isControlDown()) {
         repairMouseEvent(mwe);
