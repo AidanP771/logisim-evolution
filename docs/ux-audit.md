@@ -448,3 +448,82 @@ Notes:
   logged.
 - **Fit near the origin.** The canvas can't scroll above or left of the origin, so a small circuit
   near the top-left is fitted but can't be exactly centred. This matches the toolbar's "Auto" button.
+
+### 7.2 Keymap (Phase 3)
+
+All fork shortcuts come from one registry of named actions (`logisim/fork/keymap/ForkActions`).
+`ForkShortcuts`, a `KeyEventDispatcher`, runs a binding only when its action applies, so other keys
+reach Logisim unchanged. Bindings can be changed in `keymap.json` (see [keymap.md](keymap.md)).
+<kbd>?</kbd> opens a cheat sheet of the active bindings (`logisim/fork/gui/CheatSheet`).
+
+Plain-letter shortcuts only fire while the canvas has focus and nothing is being typed
+(`TypingGuard`). To free the letters, Logisim's own defaults moved (`AppPreferences`, resettable on
+the Hotkeys tab): gate size is now <kbd>Alt</kbd>+<kbd>S</kbd>/<kbd>N</kbd>/<kbd>M</kbd>/<kbd>W</kbd>,
+and auto-label is <kbd>Alt</kbd>+<kbd>L</kbd>/<kbd>T</kbd>/<kbd>V</kbd>/<kbd>H</kbd>/<kbd>A</kbd>.
+Settings saved before this change keep their old keys until **Reset** is pressed on the Hotkeys tab.
+
+| Input | Action | Flag |
+| --- | --- | --- |
+| <kbd>W</kbd> / <kbd>T</kbd> | Wiring tool / Text tool | `keys.singleKeyTools` |
+| <kbd>A</kbd> <kbd>O</kbd> <kbd>N</kbd> <kbd>X</kbd> | AND, OR, NOT, XOR gate | `keys.singleKeyTools` |
+| <kbd>Shift</kbd>+<kbd>A</kbd> / <kbd>Shift</kbd>+<kbd>O</kbd> | NAND / NOR gate | `keys.singleKeyTools` |
+| <kbd>I</kbd> / <kbd>P</kbd> | Input pin / output pin | `keys.singleKeyTools` |
+| <kbd>Esc</kbd> | Edit tool; with the Edit tool, clear the selection | `keys.singleKeyTools` |
+| <kbd>R</kbd> / <kbd>Shift</kbd>+<kbd>R</kbd> | Rotate selection or armed part CW / CCW | `keys.rotate` |
+| <kbd>2</kbd> … <kbd>9</kbd> | Gate input count (unchanged stock behaviour) | — |
+| <kbd>?</kbd> | Cheat sheet | `keys.cheatSheet` |
+
+### 7.3 Command palette (Phase 2)
+
+<kbd>Menu</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> (or the stock <kbd>Menu</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>
+or double <kbd>Shift</kbd>) opens Find Action with the fork's providers (`logisim/fork/palette/`).
+The built-in component and menu providers are swapped for wrappers; with `palette.extended` off they
+behave exactly as before.
+
+- `>` searches only actions (menus and fork commands); `@` searches only circuits.
+- A trailing number sets the obvious attribute (`ParameterRule`): `and 3` gives 3 inputs, `mux 4`
+  gives 2 select bits, `reg 8` gives 8 bits. A number a part can't take is ignored.
+- Circuits: <kbd>Enter</kbd> opens; <kbd>Shift</kbd>+<kbd>Enter</kbd> arms it as a subcircuit.
+- On an empty query, recently armed parts come first.
+- The dialog opens centred, as the stock one does. The plan's "near the top" placement was not done,
+  to avoid changing the upstream dialog.
+
+### 7.4 Selection editing (Phase 4)
+
+| Input | Action | Flag | Class |
+| --- | --- | --- | --- |
+| Arrows / <kbd>Shift</kbd>+arrows | Nudge selection 1 / 5 steps; wires follow | `select.nudge` | `EditActions` |
+| <kbd>Menu</kbd>+<kbd>D</kbd> | Duplicate one step down-right; copy selected | `select.duplicateOffset` | `ArrangeActions` |
+| <kbd>Menu</kbd>+<kbd>Alt</kbd>+arrows | Align left / right / top / bottom | `select.align` | `ArrangeActions` |
+| Palette | Align centres, distribute horizontally / vertically | `select.align` | `ArrangeActions` |
+| Dragging parts | Dashed guides where pins line up (drawing only) | `select.snapGuides` | `SnapGuides` |
+| Double-click wire | Select its whole net | `select.connected` | `SelectConnected` |
+| <kbd>Shift</kbd>+double-click part | Select it with everything wired to it | `select.connected` | `SelectConnected` |
+
+Arrows only nudge when the Edit tool has a selection; otherwise they keep setting facing. Align and
+distribute check pin-to-pin connectivity and undo themselves if parts would land on other wires.
+
+### 7.5 Wiring (Phase 5)
+
+| Input | Action | Flag | Class |
+| --- | --- | --- | --- |
+| Hover a wire | Highlight its net; ring its pins | `wire.netHighlight` | `NetHover` |
+| — | Red ring on unconnected pins, cross on dangling ends | `view.showUnconnected` | `NetHover` |
+| Press near a pin | Larger pick-up area, crosshair cursor; starts a wire | `wire.fromPin` | `PinFinder` |
+| Click a pin, click bends | Click-to-route; <kbd>Space</kbd> flips, <kbd>Esc</kbd> cancels | `wire.clickRoute` | `WireRouter` |
+| <kbd>Alt</kbd>+click wire | Delete the run between junctions | `wire.segmentDelete` | `WireActions` |
+| Palette | Clean up wires (dangling stubs) | `wire.cleanup` | `WireActions` |
+| <kbd>Delete</kbd> parts | Also delete wires that only led to them | `wire.deleteDangling` | `WireActions` |
+
+- **5.2 rubber-banding** needed no new code. Logisim's `MoveGesture` already reroutes attached wires
+  orthogonally when moving, and wires can't be diagonal. Nudge, align and distribute all use it.
+- **Clean-up** only removes stubs. Merging touching segments and dropping zero-length ones already
+  happens on every edit (`WireRepair`). Clean-up refuses if connectivity would change.
+- **Undo:** each gesture is one undo step of ordinary wires; nothing is added to saved files.
+
+### 7.6 Phase 6
+
+- **Fork UX tab** lists every flag with a description, grouped by phase area.
+- **Status hint** while routing a wire, in the canvas message area (`ui.statusHints`).
+- **Cheat sheet** (<kbd>?</kbd>) shows the active bindings, keymap problems and the keymap file path.
+- **Packaging:** `./gradlew createApp` builds the macOS app (see [keymap.md](keymap.md) for setup).
