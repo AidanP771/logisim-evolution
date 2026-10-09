@@ -103,7 +103,8 @@ public final class CircuitSwitcher implements KeyEventDispatcher {
     final var recent = CircuitHistory.forProject(project).getRecent();
     final var all = project.getLogisimFile().getCircuits();
     final var ordered = SwitcherOrder.order(recent, all);
-    if (ordered.size() < 2) return true;
+    // Shown even with a single circuit, so the shortcut never looks dead.
+    if (ordered.isEmpty()) return true;
     popup = new Popup(frame, project, ordered);
     popup.move(e.isShiftDown() ? -1 : 1);
     popup.showOver(frame);
@@ -172,6 +173,10 @@ public final class CircuitSwitcher implements KeyEventDispatcher {
 
     void move(int delta) {
       final var size = circuits.size();
+      if (size == 1) {
+        list.setSelectedIndex(0);
+        return;
+      }
       final var current = Math.max(list.getSelectedIndex(), 0);
       list.setSelectedIndex(Math.floorMod(current + delta, size));
     }
