@@ -1210,8 +1210,7 @@ public class AppPreferences {
           true, true));
 
   public static final PrefMonitor<KeyStroke> HOTKEY_TOOL_SELECT_10 =
-      create(new PrefMonitorKeyStroke("hotkeyToolSelect10", KeyEvent.VK_0, hotkeyMenuMask,
-          true, true));
+      create(new PrefMonitorKeyStroke("hotkeyToolSelect10", null, true, true));
 
   public static final PrefMonitor<KeyStroke> HOTKEY_TOOL_SELECT_11 =
       create(new PrefMonitorKeyStroke("hotkeyToolSelect11", null, true, true));
@@ -1325,7 +1324,7 @@ public class AppPreferences {
       HOTKEY_TOOL_SELECT_7.set(KeyStroke.getKeyStroke(KeyEvent.VK_7, menuMask));
       HOTKEY_TOOL_SELECT_8.set(KeyStroke.getKeyStroke(KeyEvent.VK_8, menuMask));
       HOTKEY_TOOL_SELECT_9.set(KeyStroke.getKeyStroke(KeyEvent.VK_9, menuMask));
-      HOTKEY_TOOL_SELECT_10.set(KeyStroke.getKeyStroke(KeyEvent.VK_0, menuMask));
+      HOTKEY_TOOL_SELECT_10.set(null);
       HOTKEY_TOOL_SELECT_11.set(null);
       HOTKEY_TOOL_SELECT_12.set(null);
       HOTKEY_TOOL_SELECT_13.set(null);
