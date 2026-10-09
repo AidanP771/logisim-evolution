@@ -93,6 +93,9 @@ val TARGET_DIR = "targetDir"
 val TARGET_FILE_PATH_BASE = "targetFilePathBase"
 val TARGET_FILE_PATH_BASE_SHORT = "targetFilePathBaseShort"
 val UPPERCASE_PROJECT_NAME = "uppercaseProjectName"
+// UX fork: installer identity, separate from the project name (which saved files mention).
+val PACKAGE_NAME = "packageName"
+val UPPERCASE_PACKAGE_NAME = "uppercasePackageName"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
@@ -149,12 +152,19 @@ extra.apply {
   val uppercaseProjectName = project.name.replaceFirstChar { it.uppercase() }.trim()
   set(UPPERCASE_PROJECT_NAME, uppercaseProjectName)
 
+  // UX fork: installers are named after `forkInstaller` (gradle.properties) so the fork installs
+  // alongside the stock release. The project name, jar name and build info stay unchanged.
+  val packageName = (findProperty("forkInstaller") as String?) ?: project.name
+  set(PACKAGE_NAME, packageName)
+  val uppercasePackageName = packageName.replaceFirstChar { it.uppercase() }.trim()
+  set(UPPERCASE_PACKAGE_NAME, uppercasePackageName)
+
   // Base name of produced artifacts. Suffixes will be added later by relevant tasks.
   val baseFilename = "${project.name}-${appVersion}"
-  set(TARGET_FILE_PATH_BASE, "${targetDir}/${baseFilename}")
-  logger.debug("targetFilePathBase: \"${targetDir}/${baseFilename}\"")
+  set(TARGET_FILE_PATH_BASE, "${targetDir}/${packageName}-${appVersion}")
+  logger.debug("targetFilePathBase: \"${targetDir}/${packageName}-${appVersion}\"")
 
-  val baseFilenameShort = "${project.name}-${appVersionShort}"
+  val baseFilenameShort = "${packageName}-${appVersionShort}"
   set(TARGET_FILE_PATH_BASE_SHORT, "${targetDir}/${baseFilenameShort}")
   logger.debug("targetFilePathBaseShort: \"${targetDir}/${baseFilenameShort}\"")
 
@@ -196,7 +206,8 @@ extra.apply {
 
   // Linux (DEB/RPM) specific settings for jpackage.
   val linuxParams = params + listOf(
-      "--name", project.name,
+      "--name", packageName,
+      "--linux-package-name", packageName,
       "--dest", targetDir,
       "--app-version", appVersion,
       "--file-associations", "${supportDir}/linux/file.jpackage",
@@ -207,7 +218,7 @@ extra.apply {
   set(LINUX_PARAMS, linuxParams)
 
   // All the macOS specific stuff.
-  set(APP_DIR_NAME, "${buildDir}/macOS-${osArch}/${uppercaseProjectName}.app")
+  set(APP_DIR_NAME, "${buildDir}/macOS-${osArch}/${uppercasePackageName}.app")
 }
 
 val generatedDocumentationResources =
@@ -569,7 +580,7 @@ tasks.register("createDeb") {
     "aarch64", "arm64" -> "arm64"
     else -> systemArch
   }
-  val outputFile = "${targetDir}/${project.name}_${appVersion}_${debArch}.deb"
+  val outputFile = "${targetDir}/${ext.get(PACKAGE_NAME) as String}_${appVersion}_${debArch}.deb"
   val linuxParams = (ext.get(LINUX_PARAMS) as List<Any?>).filterIsInstance<String>()
   val jdepsFile = ext.get(JDEPS_FILE) as String
   val repackDir = "${ext.get(BUILD_DIR) as String}/debRepack"
@@ -644,7 +655,7 @@ tasks.register("createMsi") {
 
   val supportDir = ext.get(SUPPORT_DIR) as String
   val osArch = ext.get(OS_ARCH) as String
-  val projectName = project.name
+  val projectName = ext.get(PACKAGE_NAME) as String
   val sharedParams = (ext.get(SHARED_PARAMS) as List<Any?>).filterIsInstance<String>()
   val jdepsFile = ext.get(JDEPS_FILE) as String
   val outputFile = "${ext.get(TARGET_FILE_PATH_BASE_SHORT) as String}-${osArch}.msi"
@@ -669,6 +680,8 @@ tasks.register("createMsi") {
         "--file-associations", "${supportDir}/windows/file.jpackage",
         "--icon", "${supportDir}/windows/Logisim-evolution.ico",
         "--win-menu-group", projectName,
+        // UX fork: its own upgrade code, so this MSI never replaces a stock installation.
+        "--win-upgrade-uuid", "9597b1c9-d1d6-4b4a-b696-aec53eca0f26",
         "--win-shortcut",
         "--win-dir-chooser",
         "--win-menu",
@@ -701,7 +714,7 @@ tasks.register("createExe") {
   val supportDir = ext.get(SUPPORT_DIR) as String
   val buildDir = ext.get(BUILD_DIR) as String
   val osArch = ext.get(OS_ARCH) as String
-  val projectName = project.name
+  val projectName = ext.get(PACKAGE_NAME) as String
   val dest = "${buildDir}/windows-${osArch}"
   val version = ext.get(APP_VERSION_SHORT) as String
   val sharedParams = (ext.get(SHARED_PARAMS) as List<Any?>).filterIsInstance<String>()
@@ -753,7 +766,7 @@ tasks.register<Zip>("createWindowsPortableZip") {
   val osArch = ext.get(OS_ARCH) as String
   val version = ext.get(APP_VERSION) as String
   val targetDir = ext.get(TARGET_DIR) as String
-  val projectName = project.name
+  val projectName = ext.get(PACKAGE_NAME) as String
 
   archiveFileName = "${projectName}-${version}-windows-${osArch}.zip"
   destinationDirectory.set(file(targetDir))
@@ -772,7 +785,7 @@ tasks.register("createApp") {
   val sharedParams = (ext.get(SHARED_PARAMS) as List<Any?>).filterIsInstance<String>()
   val jdepsFile = ext.get(JDEPS_FILE) as String
   val appDirName = ext.get(APP_DIR_NAME) as String
-  val projectName = ext.get(UPPERCASE_PROJECT_NAME) as String
+  val projectName = ext.get(UPPERCASE_PACKAGE_NAME) as String
   val appVersion = ext.get(APP_VERSION_SHORT) as String
 
   group = "build"
@@ -801,6 +814,9 @@ tasks.register("createApp") {
         "--app-version", appVersion,
         "--type", "app-image",
         "--mac-app-category", "education",
+        // UX fork: own bundle id and menu-bar name, so it sits alongside the stock app.
+        "--mac-package-identifier", "io.github.aidanp771.logisim-evolution-fork",
+        "--mac-package-name", "Logisim Fork",
         // UX fork: trackpad pinch zoom (see fork/nav/PinchZoom). A literal, not MACOS_GESTURE_EXPORT:
         // doLast blocks must not reference script-level values (configuration cache).
         "--java-options", "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
@@ -851,7 +867,7 @@ tasks.register("createDmg") {
 
   val appDirName = ext.get(APP_DIR_NAME) as String
   val osArch = ext.get(OS_ARCH) as String
-  val projectName = project.name
+  val projectName = ext.get(PACKAGE_NAME) as String
   val jPackage = ext.get(JPACKAGE) as String
   val appVersion = ext.get(APP_VERSION_SHORT) as String
   val targetDir = ext.get(TARGET_DIR) as String
