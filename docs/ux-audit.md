@@ -526,4 +526,10 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
 - **Fork UX tab** lists every flag with a description, grouped by phase area.
 - **Status hint** while routing a wire, in the canvas message area (`ui.statusHints`).
 - **Cheat sheet** (<kbd>?</kbd>) shows the active bindings, keymap problems and the keymap file path.
-- **Packaging:** `./gradlew createApp` builds the macOS app (see [keymap.md](keymap.md) for setup).
+- **Installers:** the `Fork installers` workflow (`.github/workflows/fork-release.yml`) builds them on
+  GitHub for Windows (MSI and portable ZIP), macOS (DMG, Apple Silicon and Intel) and Linux (DEB, RPM,
+  x86_64 and arm64), after running the tests on all three. Run it from the Actions tab, or push a
+  `fork-v*` tag to get a draft release. Locally: `./gradlew createDmg`, `createMsi` or `createDeb` on
+  the matching system. Installers use the `forkInstaller` id from `gradle.properties` (their own
+  name, bundle id and Windows upgrade code), so they install alongside stock Logisim-evolution. The
+  project name is unchanged, because saved files mention it.
