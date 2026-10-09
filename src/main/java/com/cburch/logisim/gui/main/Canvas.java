@@ -467,6 +467,11 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
     tool.mouseMoved(this, getGraphics(), event);
   }
 
+  /** UX fork overlays, drawn after the tool (circuit coordinates). */
+  void drawForkOverlay(Graphics g) {
+    if (g instanceof java.awt.Graphics2D g2) navigator.paintOverlay(g2);
+  }
+
   public void setErrorMessage(final StringGetter message) {
     viewport.setErrorMessage(message, null);
   }
@@ -945,6 +950,7 @@ public class Canvas extends JPanel implements LocaleListener, CanvasPaneContents
       if (tool != null) {
         tool.mouseMoved(Canvas.this, getGraphics(), e);
       }
+      navigator.mouseMoved(e);
     }
 
     @Override

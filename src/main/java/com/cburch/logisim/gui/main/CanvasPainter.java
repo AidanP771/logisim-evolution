@@ -152,6 +152,11 @@ class CanvasPainter implements PropertyChangeListener {
       tool.draw(canvas, context);
       gfxCopy.dispose();
     }
+
+    // UX fork: hover highlight, unconnected markers, alignment guides, wire-route preview.
+    final var forkGfx = g.create();
+    canvas.drawForkOverlay(forkGfx);
+    forkGfx.dispose();
   }
 
   private void exposeHaloedComponent(Graphics gfx) {

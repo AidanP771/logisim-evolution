@@ -56,5 +56,15 @@ final class FeatureActions {
     ForkActions.register("arrange.distributeV", Category.ARRANGE, Scope.CANVAS,
         ForkPreferences.ALIGN, List.of(), ArrangeActions::canDistribute,
         ctx -> ArrangeActions.distribute(ctx, false));
+
+    // --- Selection and wiring ---------------------------------------------------------------
+    ForkActions.register("edit.selectConnected", Category.EDIT, Scope.INFO,
+        ForkPreferences.SELECT_CONNECTED, List.of("Double-click a wire", "Shift + double-click a part"),
+        ctx -> true, null);
+    ForkActions.register("wire.route", Category.WIRING, Scope.INFO, ForkPreferences.CLICK_ROUTE,
+        List.of("Click a pin, click bends, click a pin/wire", "Space or / flips, Esc cancels"),
+        ctx -> true, null);
+    ForkActions.register("wire.segmentDelete", Category.WIRING, Scope.INFO,
+        ForkPreferences.SEGMENT_DELETE, List.of("Alt + click a wire"), ctx -> true, null);
   }
 }

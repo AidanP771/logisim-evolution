@@ -17,6 +17,7 @@ import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.util.MacCompatibility;
 import java.awt.Cursor;
+import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.FocusAdapter;
@@ -43,7 +44,7 @@ public final class CanvasNavigator {
   /** Screen pixels the pointer must travel before a middle press becomes a pan, not a click. */
   private static final int PAN_THRESHOLD = 4;
 
-  private static final int MODIFIERS =
+  static final int MODIFIERS =
       InputEvent.SHIFT_DOWN_MASK
           | InputEvent.CTRL_DOWN_MASK
           | InputEvent.META_DOWN_MASK
@@ -54,6 +55,7 @@ public final class CanvasNavigator {
 
   private final Canvas canvas;
   private final ZoomSteps.WheelAccumulator wheel = new ZoomSteps.WheelAccumulator();
+  private final EditingInput editing;
 
   /** Space is held (and was claimed by us). */
   private boolean spaceDown;
@@ -80,6 +82,7 @@ public final class CanvasNavigator {
     Palette.install();
     Palette.track(canvas.getProject());
     PinchZoom.install(canvas);
+    editing = new EditingInput(canvas, this::replayPress);
     canvas.addFocusListener(
         new FocusAdapter() {
           @Override
@@ -87,6 +90,7 @@ public final class CanvasNavigator {
             // A key release can go missing when focus moves; never leave Space "stuck".
             spaceDown = false;
             if (!ownGesture) stopPan();
+            editing.focusLost();
           }
         });
   }
@@ -95,6 +99,7 @@ public final class CanvasNavigator {
   // Keyboard
 
   public boolean keyPressed(KeyEvent e) {
+    if (editing.keyPressed(e)) return true;
     // Other fork keys (zoom, fit, tools...) run from the keymap: see fork.keymap.ForkShortcuts.
     final var mods = e.getModifiersEx() & MODIFIERS;
     if (e.getKeyCode() == KeyEvent.VK_SPACE && mods == 0 && ForkPreferences.SPACE_PAN.isEnabled()
@@ -138,6 +143,7 @@ public final class CanvasNavigator {
       startPan(e.getLocationOnScreen());
       return true;
     }
+    if (editing.mousePressed(e)) return true;
     toolGesture = true;
     return false;
   }
@@ -151,6 +157,7 @@ public final class CanvasNavigator {
       if (panning) panTo(p);
       return true;
     }
+    if (editing.mouseDragged(e)) return true;
     if (toolGesture && panning) {
       // Space pressed mid-gesture: the pointer pans; the tool resumes when Space is released.
       panTo(e.getLocationOnScreen());
@@ -170,6 +177,7 @@ public final class CanvasNavigator {
       if (press != null && !wasPan) replayAsMiddleClick(press, e);
       return true;
     }
+    if (editing.mouseReleased(e)) return true;
     if ((e.getModifiersEx() & buttonsMask()) == 0) {
       toolGesture = false;
       // Space still held after a mid-gesture pan: keep the pan cursor, stop following the pointer.
@@ -226,6 +234,38 @@ public final class CanvasNavigator {
           new MouseEvent(
               canvas, MouseEvent.MOUSE_RELEASED, release.getWhen(), 0, at.x, at.y, screen.x,
               screen.y, clicks, false, MouseEvent.BUTTON2));
+    } finally {
+      replaying = false;
+    }
+  }
+
+  /** Pointer moved with no button down (circuit coordinates); observes only. */
+  public void mouseMoved(MouseEvent e) {
+    editing.mouseMoved(e);
+  }
+
+  /** Fork overlays (net highlight, markers, guides, route preview), in circuit coordinates. */
+  public void paintOverlay(Graphics2D g) {
+    editing.paint(g);
+  }
+
+  /**
+   * Hands a press the fork held back (in circuit coordinates) to the canvas after all, because it
+   * turned into a drag.
+   */
+  private void replayPress(MouseEvent press) {
+    final var frame = canvas.getProject().getFrame();
+    final var zoom = frame == null ? 1.0 : frame.getZoomModel().getZoomFactor();
+    final var px = (int) Math.round(press.getX() * zoom);
+    final var py = (int) Math.round(press.getY() * zoom);
+    final var origin = canvas.getLocationOnScreen();
+    replaying = true;
+    try {
+      canvas.dispatchEvent(
+          new MouseEvent(
+              canvas, MouseEvent.MOUSE_PRESSED, press.getWhen(), press.getModifiersEx(), px, py,
+              origin.x + px, origin.y + py, press.getClickCount(), false, press.getButton()));
+      toolGesture = true;
     } finally {
       replaying = false;
     }
