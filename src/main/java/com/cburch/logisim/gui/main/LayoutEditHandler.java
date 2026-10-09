@@ -17,6 +17,7 @@ import com.cburch.logisim.file.LibraryEvent;
 import com.cburch.logisim.file.LibraryListener;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.edit.ArrangeActions;
+import com.cburch.logisim.fork.wiring.WireActions;
 import com.cburch.logisim.gui.menu.EditHandler;
 import com.cburch.logisim.gui.menu.LogisimMenuBar;
 import com.cburch.logisim.proj.Project;
@@ -128,6 +129,8 @@ public class LayoutEditHandler extends EditHandler
   @Override
   public void delete() {
     final var proj = frame.getProject();
+    // UX fork: also remove wires left leading only to the deleted parts (Fork UX flag).
+    if (WireActions.deleteSelection(frame.getCanvas(), proj)) return;
     final var sel = frame.getCanvas().getSelection();
     proj.doAction(SelectionActions.clear(sel));
   }

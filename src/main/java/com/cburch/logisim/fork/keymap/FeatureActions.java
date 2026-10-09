@@ -16,6 +16,7 @@ import com.cburch.logisim.fork.gui.CheatSheet;
 import com.cburch.logisim.fork.keymap.ForkAction.Category;
 import com.cburch.logisim.fork.keymap.ForkAction.Scope;
 import com.cburch.logisim.fork.palette.Palette;
+import com.cburch.logisim.fork.wiring.WireActions;
 import java.util.List;
 
 /**
@@ -58,6 +59,9 @@ final class FeatureActions {
         ctx -> ArrangeActions.distribute(ctx, false));
 
     // --- Selection and wiring ---------------------------------------------------------------
+    ForkActions.register("edit.delete", Category.EDIT, Scope.CANVAS, ForkPreferences.DELETE_DANGLING,
+        List.of("Delete", "Backspace"), WireActions::canDeleteSelection,
+        ctx -> WireActions.deleteSelection(ctx.canvas(), ctx.project()));
     ForkActions.register("edit.selectConnected", Category.EDIT, Scope.INFO,
         ForkPreferences.SELECT_CONNECTED, List.of("Double-click a wire", "Shift + double-click a part"),
         ctx -> true, null);
@@ -66,5 +70,13 @@ final class FeatureActions {
         ctx -> true, null);
     ForkActions.register("wire.segmentDelete", Category.WIRING, Scope.INFO,
         ForkPreferences.SEGMENT_DELETE, List.of("Alt + click a wire"), ctx -> true, null);
+    ForkActions.register("wire.cleanup", Category.WIRING, Scope.CANVAS, ForkPreferences.WIRE_CLEANUP,
+        List.of(), ctx -> true, WireActions::cleanUp);
+    ForkActions.register("view.toggleUnconnected", Category.WIRING, Scope.CANVAS, null, List.of(),
+        ctx -> true, ctx -> {
+          final var flag = ForkPreferences.SHOW_UNCONNECTED;
+          flag.setEnabled(!flag.isEnabled());
+          ctx.canvas().repaint();
+        });
   }
 }
