@@ -11,6 +11,7 @@ package com.cburch.logisim.gui.prefs;
 
 import static com.cburch.logisim.gui.Strings.S;
 
+import com.cburch.logisim.fork.gui.ForkUxOptions;
 import com.cburch.logisim.fpga.prefs.FpgaOptions;
 import com.cburch.logisim.fpga.prefs.SoftwaresOptions;
 import com.cburch.logisim.gui.generic.LFrame;
@@ -46,6 +47,7 @@ public class PreferencesFrame extends LFrame.Dialog {
           new FpgaOptions(this),
           new HotkeyOptions(this),
           new AutosaveOptions(this),
+          new ForkUxOptions(this),
         };
     tabbedPane = new JTabbedPane();
     int intlIndex = -1;
