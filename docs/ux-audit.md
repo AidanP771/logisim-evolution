@@ -1,8 +1,9 @@
 # UX audit: keyboard shortcuts, mouse interactions and wire editing
 
 This document lists the input bindings that exist in the codebase today, and names the class that
-implements each one. Sections 1–5 describe current behaviour. Section 6 compares it with the planned
-fork keymap and proposes resolutions. Paths are relative to `src/main/java/com/cburch/`.
+implements each one. Sections 1–5 describe the stock (upstream) behaviour. Section 6 compares it with
+the planned fork keymap and records the agreed resolutions. Section 7 lists what the fork has changed
+so far, with each feature's on/off flag. Paths are relative to `src/main/java/com/cburch/`.
 
 **Notation:** <kbd>Menu</kbd> is the platform menu-shortcut modifier: <kbd>Cmd</kbd> on macOS and
 <kbd>Ctrl</kbd> elsewhere. It comes from `Toolkit.getMenuShortcutKeyMaskEx()`, or <kbd>Alt</kbd> in
@@ -288,20 +289,21 @@ These are observations only. No code was changed.
   `AppPreferences` (`HOTKEY_WINDOW_*`, `resetHotkeys`).
 - **F2.** With the initial default, Window, Close (<kbd>Menu</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd>)
   has the same key as File, Close. `MenuFile`, `WindowMenu`.
-- **F3.** Canvas zoom uses `isControlDown()` and not the menu mask, so on macOS it is
-  <kbd>Ctrl</kbd>+<kbd>+</kbd> and not <kbd>Cmd</kbd>+<kbd>+</kbd>. It checks `VK_PLUS` and not
-  `VK_EQUALS`, so on US layouts <kbd>Ctrl</kbd>+<kbd>=</kbd> (unshifted) does not zoom in.
-  `Canvas.MyListener.keyPressed`.
-- **F4.** Zoom shortcuts and zoom-to-fit have no menu items and cannot be rebound. `Canvas`,
-  `ZoomControl`.
+- **F3.** *(Fixed by the fork; see section 7.)* Canvas zoom uses `isControlDown()` and not the menu
+  mask, so on macOS it is <kbd>Ctrl</kbd>+<kbd>+</kbd> and not <kbd>Cmd</kbd>+<kbd>+</kbd>. It
+  checks `VK_PLUS` and not `VK_EQUALS`, so on US layouts <kbd>Ctrl</kbd>+<kbd>=</kbd> (unshifted)
+  does not zoom in. `Canvas.MyListener.keyPressed`.
+- **F4.** *(Partly addressed: the fork adds fit and reset shortcuts.)* Zoom shortcuts and
+  zoom-to-fit have no menu items and cannot be rebound. `Canvas`, `ZoomControl`.
 - **F5.** By default <kbd>Ctrl</kbd>+left-click opens the Menu Tool on the circuit canvas. In the
   appearance editor, <kbd>Ctrl</kbd>+drag snaps to the grid, so the modifier means different things
   in the two editors. On macOS, Ctrl-click is also the system popup trigger. `default.templ`,
   `draw/tools/*`.
 - **F6.** Right-click works differently in the two editors. The circuit canvas uses `MouseMappings`,
   and the appearance editor uses `isPopupTrigger()`. `Canvas`, `draw/canvas/CanvasListener`.
-- **F7.** The middle button pokes components on the circuit canvas and pans only on empty space. In
-  the appearance editor it always pans. `default.templ`, `AppearanceCanvas`.
+- **F7.** *(Addressed: middle-drag now pans in both editors.)* The middle button pokes components on
+  the circuit canvas and pans only on empty space. In the appearance editor it always pans.
+  `default.templ`, `AppearanceCanvas`.
 - **F8.** The arrow keys in the Edit tool change component facing. There is no keyboard nudge for
   moving a selection. `EditTool.keyPressed`.
 - **F9.** Rotate is <kbd>R</kbd> in the Add tool but <kbd>Ctrl</kbd>+<kbd>Space</kbd> in the Edit
@@ -402,3 +404,47 @@ Cmd+Tab is the macOS app switcher. This is an accepted exception to hard constra
 positioning. The existing Simulate menu item "go out to parent state" (<kbd>Menu</kbd>+<kbd>←</kbd>)
 already moves up the simulation hierarchy. Phase 1 should decide whether "back to parent" reuses it
 or keeps its own history of viewed circuits.
+
+## 7. Fork changes
+
+Each feature below can be switched off on the **Fork UX** preferences tab
+(`logisim/fork/gui/ForkUxOptions`). The flags are stored in their own `java.util.prefs` node
+(`logisim/fork/ForkPreferences`), never in .circ files. With a flag off, the stock behaviour from
+sections 1–5 returns.
+
+### 7.1 Phase 1: canvas navigation
+
+`gui/main/Canvas` (`MyListener`) offers every key, mouse and wheel event to
+`logisim/fork/nav/CanvasNavigator` first. The navigator handles it if it's a fork binding;
+otherwise the stock handling runs unchanged.
+
+All classes are in `logisim/fork/nav/`.
+
+| Input | Action | Flag | Class |
+| --- | --- | --- | --- |
+| <kbd>Space</kbd>+drag | Pan; also mid-wire, without ending the wire | `nav.spacePan` | `CanvasNavigator` |
+| Middle drag | Pan with any tool; a still click runs the mapped tool | `nav.middlePan` | `CanvasNavigator` |
+| <kbd>Cmd</kbd>+click/drag (macOS) | Middle button: poke, pan, double-click centres | `nav.middlePan` | `CanvasNavigator` |
+| <kbd>Menu</kbd>/<kbd>Ctrl</kbd>+wheel | Zoom a level; point under cursor stays put | `nav.zoomToCursor` | `ViewActions` |
+| <kbd>Menu</kbd>+<kbd>=</kbd>/<kbd>-</kbd> | Zoom in / out at the cursor (fixes F3) | `nav.zoomToCursor` | `ViewActions` |
+| Trackpad pinch (macOS) | Smooth zoom towards the fingers | `nav.pinchZoom` | `PinchZoom` |
+| <kbd>F</kbd> / <kbd>Shift</kbd>+<kbd>F</kbd> | Fit the circuit / the selection | `nav.fitKeys` | `ViewActions` |
+| <kbd>Menu</kbd>+<kbd>0</kbd> | Reset zoom to 100% | `nav.resetZoom` | `ViewActions.resetZoom` |
+| <kbd>Ctrl</kbd>+(<kbd>Shift</kbd>+)<kbd>Tab</kbd> | Recent-circuits switcher | `nav.circuitSwitcher` | `CircuitSwitcher` |
+| <kbd>Alt</kbd>+<kbd>↑</kbd>, no selection | To parent state, or previously viewed circuit | `nav.backToParent` | `ViewActions` |
+
+Notes:
+
+- **Typing guard.** <kbd>Space</kbd>, <kbd>F</kbd> and <kbd>Alt</kbd>+<kbd>↑</kbd> are ignored while
+  the Text tool is editing (`TextTool.isEditing`) or a Poke caret takes keys
+  (`PokeTool.isScrollable`).
+- **Middle click timing.** With `nav.middlePan` on, a middle click runs on release instead of on
+  press, because only then is it clear the click wasn't a pan.
+- **Toolbar tool 10.** <kbd>Menu</kbd>+<kbd>0</kbd> is no longer the default for toolbar tool 10
+  (`AppPreferences.HOTKEY_TOOL_SELECT_10`). It can still be bound on the Hotkeys tab.
+- **Pinch needs a JVM flag.** It uses the internal `com.apple.eawt.event` API, which needs
+  `--add-exports java.desktop/com.apple.eawt.event=ALL-UNNAMED`. The jar manifest, the macOS app
+  package and `gradle run` on macOS all set it. Without it, pinch is unavailable and a single line is
+  logged.
+- **Fit near the origin.** The canvas can't scroll above or left of the origin, so a small circuit
+  near the top-left is fitted but can't be exactly centred. This matches the toolbar's "Auto" button.
