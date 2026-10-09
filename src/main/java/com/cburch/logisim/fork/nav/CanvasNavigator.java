@@ -75,6 +75,7 @@ public final class CanvasNavigator {
     this.canvas = canvas;
     CircuitHistory.forProject(canvas.getProject());
     CircuitSwitcher.install();
+    PinchZoom.install(canvas);
     canvas.addFocusListener(
         new FocusAdapter() {
           @Override

@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import org.gradle.jvm.application.tasks.CreateStartScripts
 
+/** UX fork: exposes the macOS trackpad gesture API used for pinch zoom. */
+val MACOS_GESTURE_EXPORT = "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
+
 plugins {
   checkstyle
   id("io.github.ben-manes.versions") version "0.64.0"
@@ -38,7 +41,9 @@ sonar {
 
 application {
   mainClass.set("com.cburch.logisim.Main")
-  applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+  applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED") +
+      // UX fork: trackpad pinch zoom needs the macOS gesture API (see fork/nav/PinchZoom).
+      (if (OperatingSystem.current().isMacOsX) listOf(MACOS_GESTURE_EXPORT) else listOf())
 }
 
 dependencies {
@@ -795,7 +800,9 @@ tasks.register("createApp") {
         // app versioning is strictly checked for macOS. No suffix allowed for `app-image` type.
         "--app-version", appVersion,
         "--type", "app-image",
-        "--mac-app-category", "education"
+        "--mac-app-category", "education",
+        // UX fork: trackpad pinch zoom (see fork/nav/PinchZoom).
+        "--java-options", MACOS_GESTURE_EXPORT
     )
     func.runCommand(params, "Error while creating the .app directory.")
 
@@ -1037,7 +1044,9 @@ tasks {
     manifest {
       attributes.putAll(mapOf(
           "Implementation-Title" to name,
-          "Implementation-Version" to archiveVersion
+          "Implementation-Version" to archiveVersion,
+          // UX fork: trackpad pinch zoom on macOS; ignored where the package does not exist.
+          "Add-Exports" to "java.desktop/com.apple.eawt.event"
       ))
     }
 
