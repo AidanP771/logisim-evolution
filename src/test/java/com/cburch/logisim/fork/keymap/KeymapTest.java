@@ -30,7 +30,7 @@ public class KeymapTest {
   private static final List<ForkAction> ACTIONS = List.of(FIT, AND, XOR, PAN);
 
   private static ForkAction action(String id, String key) {
-    return new ForkAction(id, Category.VIEW, Scope.CANVAS, null, List.of(key), c -> true, c -> { });
+    return new ForkAction(id, Category.VIEW, Scope.CANVAS, null, List.of(key), c -> true, c -> {});
   }
 
   private static KeyBinding key(String text) {

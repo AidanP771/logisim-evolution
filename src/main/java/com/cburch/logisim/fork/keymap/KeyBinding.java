@@ -102,15 +102,7 @@ public record KeyBinding(int keyCode, char keyChar, int modifiers) {
     var mods = 0;
     if (!modPart.isEmpty()) {
       for (final var raw : modPart.split("\\+")) {
-        mods |=
-            switch (raw.trim().toUpperCase(Locale.ROOT)) {
-              case "MOD" -> menuMask;
-              case "CTRL", "CONTROL" -> InputEvent.CTRL_DOWN_MASK;
-              case "CMD", "COMMAND", "META" -> InputEvent.META_DOWN_MASK;
-              case "ALT", "OPTION", "OPT" -> InputEvent.ALT_DOWN_MASK;
-              case "SHIFT" -> InputEvent.SHIFT_DOWN_MASK;
-              default -> throw new IllegalArgumentException("unknown modifier '" + raw + "' in " + text);
-            };
+        mods |= modifierMask(raw, menuMask, text);
       }
     }
     if (keyPart.isEmpty()) throw new IllegalArgumentException("missing key in " + text);
@@ -134,6 +126,17 @@ public record KeyBinding(int keyCode, char keyChar, int modifiers) {
           KeyEvent.VK_F1 + Integer.parseInt(upper.substring(1)) - 1, KeyEvent.CHAR_UNDEFINED, mods);
     }
     throw new IllegalArgumentException("unknown key '" + keyPart + "' in " + text);
+  }
+
+  private static int modifierMask(String raw, int menuMask, String text) {
+    return switch (raw.trim().toUpperCase(Locale.ROOT)) {
+      case "MOD" -> menuMask;
+      case "CTRL", "CONTROL" -> InputEvent.CTRL_DOWN_MASK;
+      case "CMD", "COMMAND", "META" -> InputEvent.META_DOWN_MASK;
+      case "ALT", "OPTION", "OPT" -> InputEvent.ALT_DOWN_MASK;
+      case "SHIFT" -> InputEvent.SHIFT_DOWN_MASK;
+      default -> throw new IllegalArgumentException("unknown modifier '" + raw + "' in " + text);
+    };
   }
 
   /** Whether {@code event} triggers this binding. */
