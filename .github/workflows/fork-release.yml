@@ -1,9 +1,9 @@
 #
 # UX fork: build installers for Windows, macOS and Linux.
 #
-# Runs when started by hand (Actions tab > "Fork installers" > Run workflow) or when a tag named
-# fork-v* is pushed (for example fork-v1.0). Every run uploads the installers as workflow
-# artifacts. A tag run also creates a draft GitHub Release with the installers attached; publish
+# Runs on every push to the ux-fork branch, when started by hand (Actions tab > "Fork installers" >
+# Run workflow; only shown once this file is on the default branch) or when a tag named fork-v* is
+# pushed (for example fork-v1.0). Every run uploads the installers as workflow artifacts. A tag run also creates a draft GitHub Release with the installers attached; publish
 # it from the Releases page once you have checked it.
 #
 # Installers use the "forkInstaller" id from gradle.properties, so they install alongside the
@@ -16,8 +16,20 @@ name: "Fork installers"
 on:
   workflow_dispatch:
   push:
+    # Every push to the fork's working branch builds installers to test before merging to main.
+    branches:
+      - 'ux-fork'
+    # Docs-only pushes to the branch don't need new installers (ignored for tag pushes).
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
     tags:
       - 'fork-v*'
+
+# A newer push to the same branch cancels the run still in progress for the older one.
+concurrency:
+  group: fork-installers-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
