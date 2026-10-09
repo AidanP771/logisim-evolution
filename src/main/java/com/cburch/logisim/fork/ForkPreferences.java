@@ -43,6 +43,34 @@ public final class ForkPreferences {
   public static final ForkFlag BACK_TO_PARENT =
       flag("nav.backToParent", Category.NAVIGATION, "BackToParent");
 
+  public static final ForkFlag PALETTE = flag("palette.extended", Category.PALETTE, "Palette");
+
+  public static final ForkFlag SINGLE_KEY_TOOLS =
+      flag("keys.singleKeyTools", Category.KEYBOARD, "SingleKeyTools");
+  public static final ForkFlag ROTATE_KEYS = flag("keys.rotate", Category.KEYBOARD, "RotateKeys");
+  public static final ForkFlag CHEAT_SHEET = flag("keys.cheatSheet", Category.KEYBOARD, "CheatSheet");
+
+  public static final ForkFlag NUDGE = flag("select.nudge", Category.SELECTION, "Nudge");
+  public static final ForkFlag DUPLICATE_OFFSET =
+      flag("select.duplicateOffset", Category.SELECTION, "DuplicateOffset");
+  public static final ForkFlag ALIGN = flag("select.align", Category.SELECTION, "Align");
+  public static final ForkFlag SNAP_GUIDES = flag("select.snapGuides", Category.SELECTION, "SnapGuides");
+  public static final ForkFlag SELECT_CONNECTED =
+      flag("select.connected", Category.SELECTION, "SelectConnected");
+
+  public static final ForkFlag NET_HIGHLIGHT = flag("wire.netHighlight", Category.WIRING, "NetHighlight");
+  public static final ForkFlag SHOW_UNCONNECTED =
+      flag("view.showUnconnected", Category.WIRING, "ShowUnconnected");
+  public static final ForkFlag PIN_WIRING = flag("wire.fromPin", Category.WIRING, "PinWiring");
+  public static final ForkFlag CLICK_ROUTE = flag("wire.clickRoute", Category.WIRING, "ClickRoute");
+  public static final ForkFlag WIRE_CLEANUP = flag("wire.cleanup", Category.WIRING, "WireCleanup");
+  public static final ForkFlag SEGMENT_DELETE =
+      flag("wire.segmentDelete", Category.WIRING, "SegmentDelete");
+  public static final ForkFlag DELETE_DANGLING =
+      flag("wire.deleteDangling", Category.WIRING, "DeleteDangling");
+
+  public static final ForkFlag STATUS_HINTS = flag("ui.statusHints", Category.FEEDBACK, "StatusHints");
+
   private ForkPreferences() {}
 
   private static ForkFlag flag(String key, Category category, String stringSuffix) {

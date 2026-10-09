@@ -18,7 +18,12 @@ import static com.cburch.logisim.fork.Strings.S;
 public final class ForkFlag {
   /** Groups flags on the "Fork UX" preferences tab. */
   public enum Category {
-    NAVIGATION("forkCategoryNavigation");
+    NAVIGATION("forkCategoryNavigation"),
+    PALETTE("forkCategoryPalette"),
+    KEYBOARD("forkCategoryKeyboard"),
+    SELECTION("forkCategorySelection"),
+    WIRING("forkCategoryWiring"),
+    FEEDBACK("forkCategoryFeedback");
 
     private final String labelKey;
 

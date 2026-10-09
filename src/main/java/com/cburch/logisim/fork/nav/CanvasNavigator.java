@@ -10,10 +10,10 @@
 package com.cburch.logisim.fork.nav;
 
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.keymap.ForkShortcuts;
+import com.cburch.logisim.fork.keymap.TypingGuard;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
-import com.cburch.logisim.tools.PokeTool;
-import com.cburch.logisim.tools.TextTool;
 import com.cburch.logisim.util.MacCompatibility;
 import java.awt.Cursor;
 import java.awt.MouseInfo;
@@ -75,6 +75,7 @@ public final class CanvasNavigator {
     this.canvas = canvas;
     CircuitHistory.forProject(canvas.getProject());
     CircuitSwitcher.install();
+    ForkShortcuts.install();
     PinchZoom.install(canvas);
     canvas.addFocusListener(
         new FocusAdapter() {
@@ -91,64 +92,16 @@ public final class CanvasNavigator {
   // Keyboard
 
   public boolean keyPressed(KeyEvent e) {
-    final var code = e.getKeyCode();
+    // Other fork keys (zoom, fit, tools...) run from the keymap: see fork.keymap.ForkShortcuts.
     final var mods = e.getModifiersEx() & MODIFIERS;
-    final var menuMask = AppPreferences.hotkeyMenuMask;
-
-    if (code == KeyEvent.VK_SPACE && mods == 0 && ForkPreferences.SPACE_PAN.isEnabled()
-        && !isTyping()) {
+    if (e.getKeyCode() == KeyEvent.VK_SPACE && mods == 0 && ForkPreferences.SPACE_PAN.isEnabled()
+        && !TypingGuard.isTyping(canvas)) {
       if (!spaceDown) {
         spaceDown = true;
         showPanCursor();
         // Pressed mid-gesture (e.g. while dragging a wire): pan from here without ending it.
         if (toolGesture) startPan(pointerOnScreen());
       }
-      e.consume();
-      return true;
-    }
-
-    final var zoomMods = mods & ~InputEvent.SHIFT_DOWN_MASK;
-    if ((zoomMods == menuMask || zoomMods == InputEvent.CTRL_DOWN_MASK)
-        && ForkPreferences.ZOOM_TO_CURSOR.isEnabled()) {
-      Boolean zoomIn = null;
-      switch (code) {
-        case KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS, KeyEvent.VK_ADD -> zoomIn = true;
-        case KeyEvent.VK_MINUS, KeyEvent.VK_SUBTRACT -> zoomIn = false;
-        default -> {
-          // not a zoom key
-        }
-      }
-      if (zoomIn != null) {
-        ViewActions.zoomStep(canvas, zoomIn, canvas.getMousePosition());
-        e.consume();
-        return true;
-      }
-    }
-
-    if (mods == menuMask && (code == KeyEvent.VK_0 || code == KeyEvent.VK_NUMPAD0)
-        && ForkPreferences.RESET_ZOOM.isEnabled()) {
-      ViewActions.resetZoom(canvas);
-      e.consume();
-      return true;
-    }
-
-    if (code == KeyEvent.VK_F && ForkPreferences.FIT_KEYS.isEnabled() && !isTyping()) {
-      if (mods == 0) {
-        ViewActions.fitAll(canvas);
-        e.consume();
-        return true;
-      } else if (mods == InputEvent.SHIFT_DOWN_MASK) {
-        ViewActions.fitSelection(canvas);
-        e.consume();
-        return true;
-      }
-    }
-
-    if (code == KeyEvent.VK_UP && mods == InputEvent.ALT_DOWN_MASK
-        && ForkPreferences.BACK_TO_PARENT.isEnabled() && !isTyping()
-        && canvas.getSelection().isEmpty()) {
-      // With a selection, Alt+arrows keep setting the label position.
-      ViewActions.backToParent(canvas.getProject());
       e.consume();
       return true;
     }
@@ -164,14 +117,6 @@ public final class CanvasNavigator {
       return true;
     }
     return false;
-  }
-
-  /** True while the canvas is taking typed text, so plain keys must reach the tool. */
-  private boolean isTyping() {
-    final var tool = canvas.getProject().getTool();
-    if (tool instanceof TextTool textTool && textTool.isEditing()) return true;
-    // PokeTool exposes "has a caret that takes keys" as isScrollable().
-    return tool instanceof PokeTool pokeTool && pokeTool.isScrollable();
   }
 
   // ---------------------------------------------------------------------------------------------
