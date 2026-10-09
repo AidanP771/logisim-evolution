@@ -12,6 +12,7 @@ package com.cburch.logisim.fork.nav;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.keymap.ForkShortcuts;
 import com.cburch.logisim.fork.keymap.TypingGuard;
+import com.cburch.logisim.fork.palette.Palette;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.util.MacCompatibility;
@@ -76,6 +77,8 @@ public final class CanvasNavigator {
     CircuitHistory.forProject(canvas.getProject());
     CircuitSwitcher.install();
     ForkShortcuts.install();
+    Palette.install();
+    Palette.track(canvas.getProject());
     PinchZoom.install(canvas);
     canvas.addFocusListener(
         new FocusAdapter() {

@@ -13,6 +13,7 @@ import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.gui.CheatSheet;
 import com.cburch.logisim.fork.keymap.ForkAction.Category;
 import com.cburch.logisim.fork.keymap.ForkAction.Scope;
+import com.cburch.logisim.fork.palette.Palette;
 import java.util.List;
 
 /**
@@ -28,7 +29,9 @@ final class FeatureActions {
     if (registered) return;
     registered = true;
 
-    // --- Help (window-wide) --------------------------------------------------
+    // --- Help and palette (window-wide) --------------------------------------------------
+    ForkActions.register("palette.open", Category.NAVIGATE, Scope.WINDOW, ForkPreferences.PALETTE,
+        List.of("Mod+Shift+P"), ctx -> true, ctx -> Palette.open(ctx.frame()));
     ForkActions.register("help.cheatSheet", Category.HELP, Scope.WINDOW,
         ForkPreferences.CHEAT_SHEET, List.of("?"), ctx -> true, ctx -> CheatSheet.show(ctx.frame()));
   }
