@@ -10,6 +10,8 @@
 package com.cburch.logisim.fork.keymap;
 
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.edit.ArrangeActions;
+import com.cburch.logisim.fork.edit.ArrangeActions.Edge;
 import com.cburch.logisim.fork.gui.CheatSheet;
 import com.cburch.logisim.fork.keymap.ForkAction.Category;
 import com.cburch.logisim.fork.keymap.ForkAction.Scope;
@@ -25,6 +27,12 @@ final class FeatureActions {
 
   private FeatureActions() {}
 
+  private static void align(String id, String key, Edge edge) {
+    ForkActions.register(id, Category.ARRANGE, Scope.CANVAS, ForkPreferences.ALIGN,
+        key == null ? List.of() : List.of(key), ArrangeActions::canAlign,
+        ctx -> ArrangeActions.align(ctx, edge));
+  }
+
   static synchronized void ensureRegistered() {
     if (registered) return;
     registered = true;
@@ -34,5 +42,19 @@ final class FeatureActions {
         List.of("Mod+Shift+P"), ctx -> true, ctx -> Palette.open(ctx.frame()));
     ForkActions.register("help.cheatSheet", Category.HELP, Scope.WINDOW,
         ForkPreferences.CHEAT_SHEET, List.of("?"), ctx -> true, ctx -> CheatSheet.show(ctx.frame()));
+
+    // --- Arrange (selection of 2+ / 3+ components) -------------------------------------------
+    align("arrange.alignLeft", "Mod+Alt+Left", Edge.LEFT);
+    align("arrange.alignRight", "Mod+Alt+Right", Edge.RIGHT);
+    align("arrange.alignTop", "Mod+Alt+Up", Edge.TOP);
+    align("arrange.alignBottom", "Mod+Alt+Down", Edge.BOTTOM);
+    align("arrange.alignCenterX", null, Edge.CENTER_X);
+    align("arrange.alignCenterY", null, Edge.CENTER_Y);
+    ForkActions.register("arrange.distributeH", Category.ARRANGE, Scope.CANVAS,
+        ForkPreferences.ALIGN, List.of(), ArrangeActions::canDistribute,
+        ctx -> ArrangeActions.distribute(ctx, true));
+    ForkActions.register("arrange.distributeV", Category.ARRANGE, Scope.CANVAS,
+        ForkPreferences.ALIGN, List.of(), ArrangeActions::canDistribute,
+        ctx -> ArrangeActions.distribute(ctx, false));
   }
 }

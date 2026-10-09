@@ -15,6 +15,8 @@ import com.cburch.logisim.circuit.CircuitMutation;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.file.LibraryEvent;
 import com.cburch.logisim.file.LibraryListener;
+import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.edit.ArrangeActions;
 import com.cburch.logisim.gui.menu.EditHandler;
 import com.cburch.logisim.gui.menu.LogisimMenuBar;
 import com.cburch.logisim.proj.Project;
@@ -133,6 +135,9 @@ public class LayoutEditHandler extends EditHandler
   @Override
   public void duplicate() {
     final var proj = frame.getProject();
+    // UX fork: copy one grid step down-right instead of under the pointer (Fork UX flag).
+    if (ForkPreferences.DUPLICATE_OFFSET.isEnabled()
+        && ArrangeActions.duplicateWithOffset(frame.getCanvas(), proj)) return;
     final var sel = frame.getCanvas().getSelection();
     proj.doAction(SelectionActions.duplicate(sel));
   }
