@@ -25,6 +25,7 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -91,7 +92,10 @@ public final class CheatSheet extends JDialog {
     gbc.anchor = GridBagConstraints.LINE_START;
     gbc.fill = GridBagConstraints.HORIZONTAL;
     ForkAction.Category current = null;
-    for (final var action : ForkActions.all()) {
+    // Grouped by category (registration order within each), whatever order features registered in.
+    final var ordered = new ArrayList<>(ForkActions.all());
+    ordered.sort(Comparator.comparing(ForkAction::getCategory));
+    for (final var action : ordered) {
       if (action.getCategory() != current) {
         current = action.getCategory();
         final var heading = new JLabel(current.getLabel());
