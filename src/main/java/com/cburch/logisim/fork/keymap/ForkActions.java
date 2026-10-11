@@ -83,7 +83,7 @@ public final class ForkActions {
         List.of("Mod+0", "Mod+Numpad0"), ctx -> ViewActions.resetZoom(ctx.canvas()));
     info("view.pan", Category.VIEW, ForkPreferences.SPACE_PAN, "Space + drag");
     info("view.panMiddle", Category.VIEW, ForkPreferences.MIDDLE_PAN,
-        "Middle-drag", "Cmd + drag (macOS)");
+        "Middle-drag", "Mod + drag");
     info("view.zoomWheel", Category.VIEW, ForkPreferences.ZOOM_TO_CURSOR, "Mod + scroll", "Pinch");
 
     // --- Navigate ---------------------------------------------------------------------------

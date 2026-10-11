@@ -424,7 +424,7 @@ All classes are in `logisim/fork/nav/`.
 | --- | --- | --- | --- |
 | <kbd>Space</kbd>+drag | Pan; also mid-wire, without ending the wire | `nav.spacePan` | `CanvasNavigator` |
 | Middle drag | Pan with any tool; a still click runs the mapped tool | `nav.middlePan` | `CanvasNavigator` |
-| <kbd>Cmd</kbd>+click/drag (macOS) | Middle button: poke, pan, double-click centres | `nav.middlePan` | `CanvasNavigator` |
+| <kbd>Menu</kbd>+click/drag | Middle button: poke, pan, double-click centres | `nav.middlePan` | `CanvasNavigator` |
 | <kbd>Menu</kbd>/<kbd>Ctrl</kbd>+wheel | Zoom a level; point under cursor stays put | `nav.zoomToCursor` | `ViewActions` |
 | <kbd>Menu</kbd>+<kbd>=</kbd>/<kbd>-</kbd> | Zoom in / out at the cursor (fixes F3) | `nav.zoomToCursor` | `ViewActions` |
 | Trackpad pinch (macOS) | Smooth zoom towards the fingers | `nav.pinchZoom` | `PinchZoom` |
@@ -440,6 +440,9 @@ Notes:
   (`PokeTool.isScrollable`).
 - **Middle click timing.** With `nav.middlePan` on, a middle click runs on release instead of on
   press, because only then is it clear the click wasn't a pan.
+- **Menu+click replaces Ctrl+click.** On Windows and Linux <kbd>Menu</kbd> is <kbd>Ctrl</kbd>, so with
+  `nav.middlePan` on, <kbd>Ctrl</kbd>+click no longer opens the Menu Tool (F5); right-click still does.
+  On macOS <kbd>Ctrl</kbd>+click is untouched and still opens the context menu.
 - **Toolbar tool 10.** <kbd>Menu</kbd>+<kbd>0</kbd> is no longer the default for toolbar tool 10
   (`AppPreferences.HOTKEY_TOOL_SELECT_10`). It can still be bound on the Hotkeys tab.
 - **Pinch needs a JVM flag.** It uses the internal `com.apple.eawt.event` API, which needs

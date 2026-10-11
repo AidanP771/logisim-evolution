@@ -15,7 +15,6 @@ import com.cburch.logisim.fork.keymap.TypingGuard;
 import com.cburch.logisim.fork.palette.Palette;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
-import com.cburch.logisim.util.MacCompatibility;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
@@ -63,7 +62,7 @@ public final class CanvasNavigator {
   private boolean toolGesture;
   /** We consumed a press, so its drags and release are ours too. */
   private boolean ownGesture;
-  /** The pending middle (or macOS Cmd) press, until it turns into a pan or a click. */
+  /** The pending middle (or Mod + left) press, until it turns into a pan or a click. */
   private MouseEvent middlePress;
   /** Events we re-dispatch ourselves must reach the canvas untouched. */
   private boolean replaying;
@@ -202,12 +201,15 @@ public final class CanvasNavigator {
     return true;
   }
 
-  /** The middle button, or on macOS (no middle button on trackpads) Cmd + primary button. */
-  private static boolean isMiddlePress(MouseEvent e) {
+  /**
+   * The middle button, or the menu modifier (Cmd on macOS, Ctrl elsewhere) + primary button, for
+   * trackpads and mice without a usable middle button. It runs before the mouse mappings, so it
+   * overrides the default "Ctrl + left button = Menu Tool"; right-click still opens the menu.
+   */
+  static boolean isMiddlePress(MouseEvent e) {
     if (e.getButton() == MouseEvent.BUTTON2) return true;
-    return MacCompatibility.isRunningOnMac()
-        && e.getButton() == MouseEvent.BUTTON1
-        && (e.getModifiersEx() & MODIFIERS) == InputEvent.META_DOWN_MASK;
+    return e.getButton() == MouseEvent.BUTTON1
+        && (e.getModifiersEx() & MODIFIERS) == AppPreferences.hotkeyMenuMask;
   }
 
   private static int buttonsMask() {
