@@ -44,6 +44,8 @@ public final class ForkPreferences {
       flag("nav.backToParent", Category.NAVIGATION, "BackToParent");
 
   public static final ForkFlag PALETTE = flag("palette.extended", Category.PALETTE, "Palette");
+  public static final ForkFlag PALETTE_FAST_OPEN =
+      flag("palette.fastOpen", Category.PALETTE, "PaletteFastOpen");
 
   public static final ForkFlag SINGLE_KEY_TOOLS =
       flag("keys.singleKeyTools", Category.KEYBOARD, "SingleKeyTools");

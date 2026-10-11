@@ -490,6 +490,12 @@ behave exactly as before.
 - On an empty query, recently armed parts come first.
 - The dialog opens centred, as the stock one does. The plan's "near the top" placement was not done,
   to avoid changing the upstream dialog.
+- **Fast open** (`palette.fastOpen`): each main window keeps one Find Action dialog, built about
+  1.5 s after the window opens, and hides it rather than disposing it; each open resets the query.
+  Rows get a fixed cell size, measured once, so the list no longer re-measures every result on each
+  keystroke. On a 40-circuit, 2,000-part project (macOS), keypress to a focused field went from
+  about 210 ms (first) and 95 ms (later) to 70 ms and 50 ms; a refresh dropped from 25-65 ms to 1 ms.
+  Provider indexing was already under 5 ms and is unchanged.
 
 ### 7.4 Selection editing (Phase 4)
 

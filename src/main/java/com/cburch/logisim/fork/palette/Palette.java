@@ -15,7 +15,11 @@ import com.cburch.logisim.gui.search.SearchProviders;
 import com.cburch.logisim.gui.search.providers.AddToolSearchProvider;
 import com.cburch.logisim.gui.search.providers.MenuSearchProvider;
 import com.cburch.logisim.proj.Project;
+import java.awt.AWTEvent;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 /**
  * The command palette: the built-in "Find Action" dialog with the fork's providers.
@@ -26,6 +30,7 @@ import javax.swing.SwingUtilities;
  * hidden, so Find Action behaves exactly as in the stock release.
  */
 public final class Palette {
+  private static final int PREWARM_DELAY_MS = 1500;
   private static boolean installed;
 
   private Palette() {}
@@ -45,6 +50,16 @@ public final class Palette {
     SearchProviders.register(new CircuitProvider());
     SearchProviders.register(new ActionProvider());
     PaletteKeys.install();
+    // Build each main window's palette shortly after it opens, while the user is still looking.
+    Toolkit.getDefaultToolkit().addAWTEventListener(
+        event -> {
+          if (event.getID() != WindowEvent.WINDOW_OPENED) return;
+          final var window = ((WindowEvent) event).getWindow();
+          final var timer = new Timer(PREWARM_DELAY_MS, e -> OmniSearchDialog.prewarm(window));
+          timer.setRepeats(false);
+          timer.start();
+        },
+        AWTEvent.WINDOW_EVENT_MASK);
   }
 
   /** Starts remembering recently armed components for {@code project}. */

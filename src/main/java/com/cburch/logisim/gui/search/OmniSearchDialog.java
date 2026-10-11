@@ -11,6 +11,7 @@ package com.cburch.logisim.gui.search;
 
 import static com.cburch.logisim.gui.Strings.S;
 
+import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.generic.LFrame;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -47,6 +48,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
+import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
@@ -92,7 +94,11 @@ public class OmniSearchDialog extends JDialog {
             return thread;
           });
 
-  private final transient List<SearchProvider> providers;
+  /** Client property on the owner's root pane holding its reusable dialog (fork palette.fastOpen). */
+  private static final String CACHED_DIALOG = "logisim.fork.omniSearchDialog";
+
+  private final transient SearchContext context;
+  private transient List<SearchProvider> providers;
   private final transient Map<SearchProvider, List<SearchResult>> resultsByProvider =
       new LinkedHashMap<>();
 
@@ -123,8 +129,7 @@ public class OmniSearchDialog extends JDialog {
     if (showing) return;
     showing = true;
     try {
-      final var dialog = new OmniSearchDialog(context);
-      dialog.setVisible(true);
+      obtain(context).setVisible(true);
     } finally {
       showing = false;
     }
@@ -141,16 +146,46 @@ public class OmniSearchDialog extends JDialog {
     showDialog(new SearchContext(frame, menuBar, frame.getProject()));
   }
 
+  /**
+   * Builds the dialog for {@code window} ahead of time, so the first open is as quick as the rest
+   * (fork palette.fastOpen). Does nothing if the window is not a Logisim frame or already has one.
+   */
+  public static void prewarm(Window window) {
+    if (!ForkPreferences.PALETTE_FAST_OPEN.isEnabled() || showing) return;
+    if (!(window instanceof LFrame frame) || !frame.isDisplayable()) return;
+    final var menuBar = frame.getLogisimMenuBar();
+    if (menuBar == null) return;
+    final var context = new SearchContext(frame, menuBar, frame.getProject());
+    if (!(frame.getRootPane().getClientProperty(CACHED_DIALOG) instanceof OmniSearchDialog)) {
+      // Also create the native window now; that is most of what a first open costs.
+      obtain(context).addNotify();
+    }
+  }
+
+  /**
+   * With fork palette.fastOpen on, reuses the owner's hidden dialog (reset for a fresh search)
+   * instead of building a new one, which is most of the time it takes to open.
+   */
+  private static OmniSearchDialog obtain(SearchContext context) {
+    if (!ForkPreferences.PALETTE_FAST_OPEN.isEnabled()
+        || !(context.owner() instanceof RootPaneContainer container)) {
+      return new OmniSearchDialog(context);
+    }
+    final var root = container.getRootPane();
+    if (root.getClientProperty(CACHED_DIALOG) instanceof OmniSearchDialog cached
+        && cached.context.equals(context) && cached.isDisplayable()) {
+      cached.reset();
+      return cached;
+    }
+    final var dialog = new OmniSearchDialog(context);
+    root.putClientProperty(CACHED_DIALOG, dialog);
+    return dialog;
+  }
+
   private OmniSearchDialog(SearchContext context) {
     super(context.owner(), S.get("searchTitle"), Dialog.ModalityType.APPLICATION_MODAL);
-    this.providers = SearchProviders.getAvailable(context);
-    for (final var provider : providers) {
-      try {
-        provider.prepare(context);
-      } catch (Exception e) {
-        logger.warn("Search provider {} failed to prepare", provider.getDisplayName(), e);
-      }
-    }
+    this.context = context;
+    prepareProviders();
 
     asyncDebounce = new Timer(ASYNC_DEBOUNCE_MS, event -> queryAsyncProviders());
     asyncDebounce.setRepeats(false);
@@ -159,6 +194,39 @@ public class OmniSearchDialog extends JDialog {
     refresh();
     setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
     setLocationRelativeTo(context.owner());
+  }
+
+  private void prepareProviders() {
+    this.providers = SearchProviders.getAvailable(context);
+    for (final var provider : providers) {
+      try {
+        provider.prepare(context);
+      } catch (Exception e) {
+        logger.warn("Search provider {} failed to prepare", provider.getDisplayName(), e);
+      }
+    }
+  }
+
+  /** Readies a reused dialog: providers re-indexed, empty query, first result selected. */
+  private void reset() {
+    prepareProviders();
+    resultsByProvider.clear();
+    statusLabel.setToolTipText(describeProviders());
+    searchField.setText("");
+    resultList.clearSelection();
+    refresh();
+    setLocationRelativeTo(context.owner());
+  }
+
+  /** Hides a reusable dialog, disposes any other. */
+  private void close() {
+    asyncDebounce.stop();
+    if (context.owner() instanceof RootPaneContainer container
+        && container.getRootPane().getClientProperty(CACHED_DIALOG) == this) {
+      setVisible(false);
+    } else {
+      dispose();
+    }
   }
 
   private void buildUi() {
@@ -240,7 +308,7 @@ public class OmniSearchDialog extends JDialog {
 
               @Override
               public void actionPerformed(ActionEvent event) {
-                dispose();
+                close();
               }
             });
 
@@ -249,6 +317,11 @@ public class OmniSearchDialog extends JDialog {
           @Override
           public void windowOpened(WindowEvent event) {
             searchField.requestFocusInWindow();
+          }
+
+          @Override
+          public void windowClosing(WindowEvent event) {
+            asyncDebounce.stop();
           }
 
           @Override
@@ -348,6 +421,7 @@ public class OmniSearchDialog extends JDialog {
             .reversed());
 
     final var previous = resultList.getSelectedValue();
+    if (ForkPreferences.PALETTE_FAST_OPEN.isEnabled()) fixCellSize(merged);
     replaceResults(resultModel, merged);
 
     var selection = previous == null ? -1 : resultModel.indexOf(previous);
@@ -365,6 +439,25 @@ public class OmniSearchDialog extends JDialog {
                 "searchResultCount",
                 String.valueOf(resultModel.size()),
                 providerCount));
+  }
+
+  /**
+   * Fork palette.fastOpen: measures the rows once and fixes the cell size, so the list no longer
+   * runs the renderer over every result each time they change (most of the cost of a refresh).
+   * Every row is one line of text with at most one icon, so they share a height anyway.
+   */
+  private void fixCellSize(List<SearchResult> results) {
+    if (resultList.getFixedCellHeight() > 0 || results.isEmpty()) return;
+    final var renderer = resultList.getCellRenderer();
+    var height = 0;
+    for (var i = 0; i < results.size(); i++) {
+      final var cell =
+          renderer.getListCellRendererComponent(resultList, results.get(i), i, false, false);
+      height = Math.max(height, cell.getPreferredSize().height);
+    }
+    // The list tracks the viewport width, so the fixed width only feeds its preferred size.
+    resultList.setFixedCellWidth(DIALOG_WIDTH / 2);
+    resultList.setFixedCellHeight(height);
   }
 
   /** Replaces the visible results using one removal and one addition event. */
@@ -442,7 +535,7 @@ public class OmniSearchDialog extends JDialog {
     }
     // Close first: the action may open a dialog of its own, which must not end up parented to a
     // window that is about to disappear.
-    dispose();
+    close();
     SwingUtilities.invokeLater(
         () -> {
           try {
