@@ -13,6 +13,7 @@ import static com.cburch.logisim.gui.Strings.S;
 
 import com.cburch.contracts.BaseMouseListenerContract;
 import com.cburch.logisim.data.Bounds;
+import com.cburch.logisim.fork.gui.UnconnectedToggle;
 import com.cburch.logisim.gui.icons.ZoomIcon;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
@@ -79,7 +80,11 @@ public class ZoomControl extends JPanel {
     this.add(zoom, BorderLayout.NORTH);
 
     grid = new GridIcon();
-    this.add(grid, BorderLayout.EAST);
+    // Fork UX: the unconnected-marker toggle sits beside the grid toggle.
+    final var toggles = new JPanel(new BorderLayout());
+    toggles.add(new UnconnectedToggle(canvas), BorderLayout.WEST);
+    toggles.add(grid, BorderLayout.EAST);
+    this.add(toggles, BorderLayout.EAST);
     grid.update();
 
     zoomButton = new AutoZoomButton(model);

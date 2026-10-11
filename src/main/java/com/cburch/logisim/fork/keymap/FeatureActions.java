@@ -72,7 +72,7 @@ final class FeatureActions {
         ForkPreferences.SEGMENT_DELETE, List.of("Alt + click a wire"), ctx -> true, null);
     ForkActions.register("wire.cleanup", Category.WIRING, Scope.CANVAS, ForkPreferences.WIRE_CLEANUP,
         List.of(), ctx -> true, WireActions::cleanUp);
-    ForkActions.register("view.toggleUnconnected", Category.WIRING, Scope.CANVAS, null, List.of(),
+    ForkActions.register("view.toggleUnconnected", Category.WIRING, Scope.CANVAS, null, List.of("U"),
         ctx -> true, ctx -> {
           final var flag = ForkPreferences.SHOW_UNCONNECTED;
           flag.setEnabled(!flag.isEnabled());

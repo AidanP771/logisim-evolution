@@ -512,6 +512,7 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
 | --- | --- | --- | --- |
 | Hover a wire | Highlight its net; ring its pins | `wire.netHighlight` | `NetHover` |
 | — | Red ring on unconnected pins, cross on dangling ends | `view.showUnconnected` | `NetHover` |
+| <kbd>U</kbd>, ring button by the grid toggle | Show or hide those markers | `view.showUnconnected` | `UnconnectedToggle` |
 | Press near a pin | Larger pick-up area, crosshair cursor; starts a wire | `wire.fromPin` | `PinFinder` |
 | Click a pin, click bends | Click-to-route; <kbd>Space</kbd> flips, <kbd>Esc</kbd> cancels | `wire.clickRoute` | `WireRouter` |
 | <kbd>Alt</kbd>+click wire | Delete the run between junctions | `wire.segmentDelete` | `WireActions` |

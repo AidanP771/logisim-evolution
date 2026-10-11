@@ -28,8 +28,9 @@ import java.util.List;
  * ends. Nothing here changes the circuit.
  */
 public final class NetHover {
+  /** Colour of the unconnected-pin and dangling-end markers. */
+  public static final Color UNCONNECTED = new Color(0xD3, 0x2F, 0x2F);
   private static final Color NET_PIN = new Color(0x1E, 0x6B, 0xB8);
-  private static final Color UNCONNECTED = new Color(0xD3, 0x2F, 0x2F);
 
   private final Canvas canvas;
   private Wire hovered;

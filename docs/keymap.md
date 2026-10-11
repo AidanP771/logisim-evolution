@@ -114,7 +114,7 @@ cheat sheet but can't be rebound.
 | Id | Action | Default |
 | --- | --- | --- |
 | `wire.cleanup` | Clean up wires (remove dangling stubs) | — |
-| `view.toggleUnconnected` | Show or hide unconnected markers | — |
+| `view.toggleUnconnected` | Show or hide unconnected markers | `U` |
 
 ### Help
 
