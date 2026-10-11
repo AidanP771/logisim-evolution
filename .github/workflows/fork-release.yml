@@ -253,10 +253,17 @@ jobs:
             gh release create fork-latest --title "UX fork: latest build" --notes "${notes}" \
               --verify-tag --latest
           fi
+          # Artifacts with files from several folders keep them (dist/dist, dist/libs), so collect
+          # the installers wherever they landed.
+          mapfile -t files < <(find dist -type f \( -name '*.msi' -o -name '*.zip' -o -name '*.dmg' \
+            -o -name '*.deb' -o -name '*.rpm' -o -name '*-all.jar' \) | sort)
+          printf 'Uploading:\n'; printf '  %s\n' "${files[@]}"
+          [ "${#files[@]}" -gt 0 ]
           # Upload first, then drop files from older builds, so the link never shows an empty release.
-          gh release upload fork-latest dist/* --clobber
+          gh release upload fork-latest "${files[@]}" --clobber
+          names="$(printf '%s\n' "${files[@]}" | xargs -n1 basename)"
           for asset in $(gh release view fork-latest --json assets --jq '.assets[].name'); do
-            if [ ! -e "dist/${asset}" ]; then
+            if ! grep -qxF "${asset}" <<< "${names}"; then
               gh release delete-asset fork-latest "${asset}" --yes
             fi
           done
