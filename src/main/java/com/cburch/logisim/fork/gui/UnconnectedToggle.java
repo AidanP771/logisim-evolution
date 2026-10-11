@@ -11,8 +11,8 @@ package com.cburch.logisim.fork.gui;
 
 import static com.cburch.logisim.fork.Strings.S;
 
+import com.cburch.logisim.fork.ForkColors;
 import com.cburch.logisim.fork.ForkPreferences;
-import com.cburch.logisim.fork.wiring.NetHover;
 import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -82,7 +82,7 @@ public final class UnconnectedToggle extends JComponent {
       g2.setStroke(new BasicStroke(AppPreferences.getScaled(2)));
       // On: the red ring the canvas draws. Off: a muted ring with a slash through it.
       final var muted = UIManager.getColor("Label.disabledForeground");
-      g2.setColor(on ? NetHover.UNCONNECTED : muted != null ? muted : Color.GRAY);
+      g2.setColor(on ? ForkColors.unconnected() : muted != null ? muted : Color.GRAY);
       g2.drawOval(x, y, d, d);
       if (!on) g2.drawLine(x, y + d, x + d, y);
     } finally {

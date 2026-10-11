@@ -12,6 +12,7 @@ package com.cburch.logisim.fork.edit;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Location;
+import com.cburch.logisim.fork.ForkColors;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.main.Canvas;
 import java.awt.BasicStroke;
@@ -27,7 +28,6 @@ import java.util.List;
  * still Logisim's own grid-snapped one.
  */
 public final class SnapGuides {
-  private static final Color GUIDE = new Color(0xC2, 0x18, 0x5B);
   /** Pins further apart than this (circuit units) do not get a guide. */
   private static final int REACH = 400;
 
@@ -103,7 +103,7 @@ public final class SnapGuides {
     if (!isActive() || (dx == 0 && dy == 0)) return;
     final var g2 = (Graphics2D) g.create();
     try {
-      g2.setColor(GUIDE);
+      g2.setColor(ForkColors.guide());
       g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f,
           new float[] {4f, 3f}, 0f));
       for (final var l : lines()) g2.drawLine(l[0], l[1], l[2], l[3]);

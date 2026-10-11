@@ -15,13 +15,13 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitMutation;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.data.Location;
+import com.cburch.logisim.fork.ForkColors;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.edit.CircuitEditAction;
 import com.cburch.logisim.fork.keymap.ActionContext;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.gui.main.SelectionActions;
 import com.cburch.logisim.proj.Project;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,7 +29,6 @@ import java.util.List;
 /** Wire clean-up and deletion helpers. Every change is one undoable action. */
 public final class WireActions {
   /** Colour for informational canvas messages (Logisim's own message area). */
-  static final Color INFO_COLOR = new Color(0x1E, 0x6B, 0xB8);
 
   private WireActions() {}
 
@@ -48,7 +47,7 @@ public final class WireActions {
     final var graph = WireGraph.of(circuit);
     final var stubs = graph.danglingStubs();
     if (stubs.isEmpty()) {
-      canvas.setErrorMessage(S.getter("forkCleanupNothing"), INFO_COLOR);
+      canvas.setErrorMessage(S.getter("forkCleanupNothing"), ForkColors.accent());
       return;
     }
     if (!graph.pinNets().equals(graph.without(stubs).pinNets())) {
@@ -59,7 +58,7 @@ public final class WireActions {
     final var xn = new CircuitMutation(circuit);
     xn.removeAll(stubs);
     ctx.project().doAction(xn.toAction(S.getter("forkCleanupAction")));
-    canvas.setErrorMessage(S.getter("forkCleanupDone", String.valueOf(stubs.size())), INFO_COLOR);
+    canvas.setErrorMessage(S.getter("forkCleanupDone", String.valueOf(stubs.size())), ForkColors.accent());
   }
 
   /** Alt+click: deletes the run of wire through {@code wire} between junctions, pins or ends. */

@@ -15,6 +15,7 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitMutation;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.data.Location;
+import com.cburch.logisim.fork.ForkColors;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.main.Canvas;
 import java.awt.BasicStroke;
@@ -31,7 +32,6 @@ import java.util.List;
  * ordinary wire segments.
  */
 public final class WireRouter {
-  private static final Color PREVIEW = new Color(0x1E, 0x6B, 0xB8);
 
   private final Canvas canvas;
   private final List<Location> points = new ArrayList<>();
@@ -149,7 +149,7 @@ public final class WireRouter {
     if (!isActive()) return;
     final var g2 = (Graphics2D) g.create();
     try {
-      g2.setColor(PREVIEW);
+      g2.setColor(ForkColors.accent());
       g2.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
       drawPolyline(g2, points);
       final var last = points.get(points.size() - 1);
@@ -179,7 +179,7 @@ public final class WireRouter {
 
   private void hint() {
     if (ForkPreferences.STATUS_HINTS.isEnabled()) {
-      canvas.setErrorMessage(S.getter("forkHintRouting"), WireActions.INFO_COLOR);
+      canvas.setErrorMessage(S.getter("forkHintRouting"), ForkColors.accent());
     }
   }
 

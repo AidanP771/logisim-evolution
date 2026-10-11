@@ -13,6 +13,7 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.circuit.WireSet;
 import com.cburch.logisim.data.Location;
+import com.cburch.logisim.fork.ForkColors;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.main.Canvas;
 import java.awt.BasicStroke;
@@ -28,9 +29,6 @@ import java.util.List;
  * ends. Nothing here changes the circuit.
  */
 public final class NetHover {
-  /** Colour of the unconnected-pin and dangling-end markers. */
-  public static final Color UNCONNECTED = new Color(0xD3, 0x2F, 0x2F);
-  private static final Color NET_PIN = new Color(0x1E, 0x6B, 0xB8);
 
   private final Canvas canvas;
   private Wire hovered;
@@ -84,7 +82,7 @@ public final class NetHover {
     if (hovered == null || netPins.isEmpty()) return;
     final var g2 = (Graphics2D) g.create();
     try {
-      g2.setColor(NET_PIN);
+      g2.setColor(ForkColors.accent());
       g2.setStroke(new BasicStroke(2f));
       for (final var p : netPins) g2.drawOval(p.getX() - 5, p.getY() - 5, 10, 10);
     } finally {
@@ -98,7 +96,7 @@ public final class NetHover {
     final var graph = WireGraph.of(circuit);
     final var g2 = (Graphics2D) g.create();
     try {
-      g2.setColor(UNCONNECTED);
+      g2.setColor(ForkColors.unconnected());
       g2.setStroke(new BasicStroke(1.5f));
       for (final var comp : circuit.getNonWires()) {
         for (final var end : comp.getEnds()) {

@@ -125,7 +125,8 @@ public class WiringTool extends Tool {
       final var x1 = e1.getX();
       final var y1 = e1.getY();
 
-      g.setColor(Color.BLACK);
+      // Fork UX: theme colour, so the preview shows on dark canvases.
+      g.setColor(new Color(AppPreferences.COMPONENT_COLOR.get()));
       GraphicsUtil.switchToWidth(g, 3);
       if (direction == HORIZONTAL) {
         if (x0 != x1) g.drawLine(x0, y0, x1, y0);
