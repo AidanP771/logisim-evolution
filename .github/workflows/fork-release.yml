@@ -3,8 +3,13 @@
 #
 # Runs on every push to the ux-fork branch, when started by hand (Actions tab > "Fork installers" >
 # Run workflow; only shown once this file is on the default branch) or when a tag named fork-v* is
-# pushed (for example fork-v1.0). Every run uploads the installers as workflow artifacts. A tag run also creates a draft GitHub Release with the installers attached; publish
-# it from the Releases page once you have checked it.
+# pushed (for example fork-v1.0). Every run uploads the installers as workflow artifacts. A tag run
+# also creates a draft GitHub Release with the installers attached; publish it from the Releases
+# page once you have checked it.
+#
+# Every successful push to ux-fork also refreshes the "fork-latest" release: the tag moves to the
+# pushed commit and the release's files are replaced, so this link always has the newest build:
+# https://github.com/AidanP771/logisim-evolution/releases/tag/fork-latest
 #
 # Installers use the "forkInstaller" id from gradle.properties, so they install alongside the
 # stock Logisim-evolution instead of replacing it. They are not code-signed: macOS asks you to
@@ -207,3 +212,51 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" build/dist/*.msi build/dist/*.zip --clobber
+
+  # ###############################################################################################
+  # Rolling "latest build" release for ux-fork pushes: one stable download link.
+
+  latest:
+    name: "Update the fork-latest release"
+    if: github.ref == 'refs/heads/ux-fork' && !failure() && !cancelled()
+    needs: [ linux, macos, windows ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: "Move the tag and replace the release files"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ls -l dist
+          git tag -f fork-latest "${GITHUB_SHA}"
+          git push -f origin refs/tags/fork-latest
+          short="${GITHUB_SHA::7}"
+          notes="Newest build of the ux-fork branch (commit ${short}, $(date -u '+%Y-%m-%d %H:%M UTC')).
+
+          Pick the file for your system:
+          - Windows: the .msi installer, or the portable .zip
+          - macOS: the .dmg (aarch64 for Apple Silicon, x86_64 for Intel)
+          - Linux: the .deb or .rpm for your architecture
+          - Any system with Java 21: the -all.jar (run with java -jar)
+
+          These install alongside the stock Logisim-evolution. They are not code-signed: on macOS
+          right-click the app and choose Open the first time; on Windows choose More info > Run
+          anyway if SmartScreen warns."
+          if gh release view fork-latest >/dev/null 2>&1; then
+            gh release edit fork-latest --title "UX fork: latest build" --notes "${notes}" --latest
+          else
+            gh release create fork-latest --title "UX fork: latest build" --notes "${notes}" \
+              --verify-tag --latest
+          fi
+          # Upload first, then drop files from older builds, so the link never shows an empty release.
+          gh release upload fork-latest dist/* --clobber
+          for asset in $(gh release view fork-latest --json assets --jq '.assets[].name'); do
+            if [ ! -e "dist/${asset}" ]; then
+              gh release delete-asset fork-latest "${asset}" --yes
+            fi
+          done
