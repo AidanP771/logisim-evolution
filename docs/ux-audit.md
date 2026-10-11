@@ -530,6 +530,8 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
 - **Fork UX tab** lists every flag with a description, grouped by phase area.
 - **Status hint** while routing a wire, in the canvas message area (`ui.statusHints`).
 - **Cheat sheet** (<kbd>?</kbd>) shows the active bindings, keymap problems and the keymap file path.
+  The search field at the top filters by action, key or category (every word must match);
+  <kbd>Esc</kbd> clears the search, then closes.
 - **Installers:** the `Fork installers` workflow (`.github/workflows/fork-release.yml`) builds them on
   GitHub for Windows (MSI and portable ZIP), macOS (DMG, Apple Silicon and Intel) and Linux (DEB, RPM,
   x86_64 and arm64), after running the tests on all three. Run it from the Actions tab, or push a

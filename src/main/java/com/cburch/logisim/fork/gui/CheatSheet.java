@@ -24,9 +24,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -37,6 +40,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 /** The "?" overlay: every fork binding, grouped by category, plus where keymap.json lives. */
 public final class CheatSheet extends JDialog {
@@ -45,11 +50,34 @@ public final class CheatSheet extends JDialog {
 
   private final JPanel table = new JPanel(new GridBagLayout());
   private final JPanel problems = new JPanel(new GridBagLayout());
+  private final JTextField search = new JTextField();
+  private Keymap keymap;
 
   private CheatSheet(Window owner) {
     super(owner, S.get("forkCheatSheetTitle"), Dialog.ModalityType.APPLICATION_MODAL);
     final var content = new JPanel(new BorderLayout(0, 8));
     content.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+
+    search.putClientProperty("JTextField.placeholderText", S.get("forkCheatSheetSearch"));
+    search.putClientProperty("JTextField.showClearButton", true);
+    search.getDocument().addDocumentListener(
+        new DocumentListener() {
+          @Override
+          public void insertUpdate(DocumentEvent e) {
+            fill();
+          }
+
+          @Override
+          public void removeUpdate(DocumentEvent e) {
+            fill();
+          }
+
+          @Override
+          public void changedUpdate(DocumentEvent e) {
+            fill();
+          }
+        });
+    content.add(search, BorderLayout.NORTH);
 
     final var scroll = new JScrollPane(table);
     scroll.setBorder(BorderFactory.createEmptyBorder());
@@ -66,7 +94,10 @@ public final class CheatSheet extends JDialog {
     footer.add(problems, BorderLayout.CENTER);
     final var buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
     final var reload = new JButton(S.get("forkCheatSheetReload"));
-    reload.addActionListener(e -> fill(KeymapStore.reload()));
+    reload.addActionListener(e -> {
+      keymap = KeymapStore.reload();
+      fill();
+    });
     final var close = new JButton(S.get("forkCheatSheetClose"));
     close.addActionListener(e -> dispose());
     buttons.add(reload);
@@ -76,17 +107,47 @@ public final class CheatSheet extends JDialog {
     setContentPane(content);
 
     getRootPane().registerKeyboardAction(
-        e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+        e -> {
+          // Esc clears the search first, then closes.
+          if (search.getText().isEmpty()) {
+            dispose();
+          } else {
+            search.setText("");
+          }
+        },
+        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
         JComponent.WHEN_IN_FOCUSED_WINDOW);
     getRootPane().setDefaultButton(close);
 
-    fill(KeymapStore.get());
+    keymap = KeymapStore.get();
+    fill();
     setSize(620, 640);
     setLocationRelativeTo(owner);
+    addWindowListener(
+        new WindowAdapter() {
+          @Override
+          public void windowOpened(WindowEvent e) {
+            search.requestFocusInWindow();
+          }
+        });
   }
 
-  private void fill(Keymap keymap) {
+  /**
+   * Whether a row matches the search: every word of {@code query} must occur, ignoring case, in
+   * the action label, its keys or its category. A blank query matches everything.
+   */
+  static boolean matches(String query, String label, List<String> keys, String category) {
+    final var haystack =
+        (label + " " + String.join(" ", keys) + " " + category).toLowerCase(Locale.ROOT);
+    for (final var word : query.trim().toLowerCase(Locale.ROOT).split("\\s+")) {
+      if (!haystack.contains(word)) return false;
+    }
+    return true;
+  }
+
+  private void fill() {
     table.removeAll();
+    final var query = search.getText();
     final var gbc = new GridBagConstraints();
     gbc.gridy = 0;
     gbc.anchor = GridBagConstraints.LINE_START;
@@ -96,6 +157,8 @@ public final class CheatSheet extends JDialog {
     final var ordered = new ArrayList<>(ForkActions.all());
     ordered.sort(Comparator.comparing(ForkAction::getCategory));
     for (final var action : ordered) {
+      final var keys = keysFor(action, keymap);
+      if (!matches(query, action.getLabel(), keys, action.getCategory().getLabel())) continue;
       if (action.getCategory() != current) {
         current = action.getCategory();
         final var heading = new JLabel(current.getLabel());
@@ -108,7 +171,6 @@ public final class CheatSheet extends JDialog {
         gbc.gridy++;
         gbc.gridwidth = 1;
       }
-      final var keys = keysFor(action, keymap);
       final var label = new JLabel(action.getLabel());
       final var keyLabel = new JLabel(keys.isEmpty() ? "—" : String.join("   ", keys));
       keyLabel.setFont(keyLabel.getFont().deriveFont(Font.BOLD));
@@ -127,6 +189,11 @@ public final class CheatSheet extends JDialog {
       gbc.gridy++;
     }
     gbc.gridx = 0;
+    if (current == null) {
+      gbc.insets = new Insets(0, 0, 0, 0);
+      table.add(new JLabel(S.get("forkCheatSheetNoMatch")), gbc);
+      gbc.gridy++;
+    }
     gbc.weighty = 1;
     table.add(new JPanel(), gbc);
 
