@@ -16,6 +16,7 @@ import com.cburch.logisim.analyze.model.AnalyzerModel;
 import com.cburch.logisim.analyze.model.Implicant;
 import com.cburch.logisim.analyze.model.TruthTableEvent;
 import com.cburch.logisim.analyze.model.TruthTableListener;
+import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.generic.LFrame;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.util.LocaleListener;
@@ -121,6 +122,7 @@ public class Analyzer extends LFrame.SubWindow {
       exportTable.setEnabled(hasInputsAndOutputs);
       exportTex.setEnabled(hasInputsAndOutputs
               && tt.getRowCount() <= AnalyzerTexWriter.MAX_TRUTH_TABLE_ROWS);
+      copyTex.setEnabled(exportTex.isEnabled());
       tabbedPane.setEnabledAt(TABLE_TAB, hasInputsAndOutputs);
       tabbedPane.setEnabledAt(EXPRESSION_TAB, hasInputsAndOutputs
               && (nrOfInputs <= Implicant.MAXIMAL_NR_OF_INPUTS_FOR_AUTO_MINIMAL_FORM));
@@ -149,6 +151,7 @@ public class Analyzer extends LFrame.SubWindow {
   private final ImportTableButton importTable;
   private final ExportTableButton exportTable;
   private final ExportLatexButton exportTex;
+  private final CopyLatexButton copyTex;
   private final MinimizeButton minimizeMinterms;
   private final MinimizeButton minimizeMaxterms;
 
@@ -168,6 +171,11 @@ public class Analyzer extends LFrame.SubWindow {
     exportTable.setEnabled(false);
     exportTex = new ExportLatexButton(this, model);
     exportTex.setEnabled(false);
+    copyTex = new CopyLatexButton(model);
+    copyTex.setEnabled(false);
+    copyTex.setVisible(ForkPreferences.COPY_TEX.isEnabled());
+    ForkPreferences.addListener(
+        ForkPreferences.COPY_TEX, e -> copyTex.setVisible(ForkPreferences.COPY_TEX.isEnabled()));
     minimizeMinterms = new MinimizeButton(this, model, AnalyzerModel.FORMAT_SUM_OF_PRODUCTS);
     minimizeMinterms.setEnabled(false);
     minimizeMaxterms = new MinimizeButton(this, model, AnalyzerModel.FORMAT_PRODUCT_OF_SUMS);
@@ -194,6 +202,7 @@ public class Analyzer extends LFrame.SubWindow {
     buttonPanel.add(minimizeMaxterms);
     buttonPanel.add(exportTable);
     buttonPanel.add(exportTex);
+    buttonPanel.add(copyTex);
     contents.add(vertStrut, BorderLayout.WEST);
     contents.add(horzStrut, BorderLayout.NORTH);
     contents.add(tabbedPane, BorderLayout.CENTER);

@@ -71,6 +71,8 @@ public final class ForkPreferences {
 
   public static final ForkFlag STATUS_HINTS = flag("ui.statusHints", Category.FEEDBACK, "StatusHints");
 
+  public static final ForkFlag COPY_TEX = flag("analyzer.copyTex", Category.TOOLS, "CopyTex");
+
   private ForkPreferences() {}
 
   private static ForkFlag flag(String key, Category category, String stringSuffix) {

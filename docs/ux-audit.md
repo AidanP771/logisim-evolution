@@ -539,3 +539,12 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
   the matching system. Installers use the `forkInstaller` id from `gradle.properties` (their own
   name, bundle id and Windows upgrade code), so they install alongside stock Logisim-evolution. The
   project name is unchanged, because saved files mention it.
+
+### 7.7 Dialogs and tools
+
+| Feature | Flag | Class |
+| --- | --- | --- |
+| Analyzer: icon button beside **Export TeX** copies the LaTeX to the clipboard | `analyzer.copyTex` | `CopyLatexButton` |
+
+`AnalyzerTexWriter.toTex` and `doSave` share one writer, so the copied text and the exported file are
+identical. This is analyzer export, not .circ file I/O.

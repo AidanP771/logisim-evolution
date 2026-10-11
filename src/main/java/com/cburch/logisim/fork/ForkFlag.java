@@ -23,7 +23,8 @@ public final class ForkFlag {
     KEYBOARD("forkCategoryKeyboard"),
     SELECTION("forkCategorySelection"),
     WIRING("forkCategoryWiring"),
-    FEEDBACK("forkCategoryFeedback");
+    FEEDBACK("forkCategoryFeedback"),
+    TOOLS("forkCategoryTools");
 
     private final String labelKey;
 

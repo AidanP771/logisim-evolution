@@ -23,9 +23,11 @@ import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.Var.Bit;
 import com.cburch.logisim.prefs.AppPreferences;
 import java.awt.Color;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
@@ -326,11 +328,23 @@ public class AnalyzerTexWriter {
   }
 
   public static void doSave(File file, AnalyzerModel model) throws IOException {
+    write(new PrintStream(file), model);
+  }
+
+  /** The same document {@link #doSave} writes, as a string (for the clipboard). */
+  public static String toTex(AnalyzerModel model) {
+    final var bytes = new ByteArrayOutputStream();
+    write(new PrintStream(bytes, true, StandardCharsets.UTF_8), model);
+    return bytes.toString(StandardCharsets.UTF_8);
+  }
+
+  /** Writes the LaTeX document to {@code target} and closes it. */
+  private static void write(PrintStream target, AnalyzerModel model) {
     final var linedStyle = AppPreferences.KMAP_LINED_STYLE.getBoolean();
     /* make sure the model is up to date */
     final var modelIsUpdating = model.getOutputExpressions().updatesEnabled();
     model.getOutputExpressions().enableUpdates();
-    try (PrintStream out = new PrintStream(file)) {
+    try (PrintStream out = target) {
       /*
        * We start to create the document header section with all required packages
        */
