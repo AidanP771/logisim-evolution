@@ -73,6 +73,12 @@ public final class ForkPreferences {
 
   public static final ForkFlag STATUS_HINTS = flag("ui.statusHints", Category.FEEDBACK, "StatusHints");
 
+  public static final ForkFlag QUICK_CONNECT =
+      flag("build.quickConnect", Category.BUILD, "QuickConnect");
+  public static final ForkFlag STAMP = flag("build.stamp", Category.BUILD, "Stamp");
+  public static final ForkFlag CHAIN = flag("build.chain", Category.BUILD, "Chain");
+  public static final ForkFlag BLUEPRINTS = flag("build.blueprints", Category.BUILD, "Blueprints");
+
   public static final ForkFlag COPY_TEX = flag("analyzer.copyTex", Category.TOOLS, "CopyTex");
   public static final ForkFlag PATH_BAR = flag("ui.pathBar", Category.TOOLS, "PathBar");
   /** Off by default: the native macOS dialog already takes typed paths (Cmd+Shift+G). */

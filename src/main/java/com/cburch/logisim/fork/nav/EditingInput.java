@@ -13,6 +13,7 @@ import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.builder.QuickConnect;
 import com.cburch.logisim.fork.edit.SelectConnected;
 import com.cburch.logisim.fork.edit.SnapGuides;
 import com.cburch.logisim.fork.keymap.ForkShortcuts;
@@ -52,11 +53,15 @@ final class EditingInput {
   private final WireRouter router;
   private final NetHover hover;
   private final SnapGuides guides;
+  private final QuickConnect quick;
 
   private Pending pending = Pending.NONE;
   private MouseEvent pendingPress;
   private Location pendingAt;
   private Wire pendingWire;
+  /** The held press may become a click-to-route (on release) or a quick connect (on drag). */
+  private boolean pendingRoute;
+  private boolean pendingQuick;
   private boolean swallowRelease;
   private Location guidePress;
   private boolean pinCursorShown;
@@ -67,6 +72,7 @@ final class EditingInput {
     this.router = new WireRouter(canvas);
     this.hover = new NetHover(canvas);
     this.guides = new SnapGuides(canvas);
+    this.quick = new QuickConnect(canvas);
     // While routing, Esc/Space/Backspace/Enter/"/" belong to the router, not to keymap shortcuts.
     ForkShortcuts.setModal(canvas, e -> router.isActive() && WireRouter.isRouteKey(e));
   }
@@ -91,6 +97,12 @@ final class EditingInput {
   // --- keys -------------------------------------------------------------------------------
 
   boolean keyPressed(KeyEvent e) {
+    if (quick.isActive() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+      quick.cancel();
+      swallowRelease = true;
+      e.consume();
+      return true;
+    }
     if (!router.isActive()) return false;
     if (router.isStale() || !(isEditTool() || isWiringTool())) {
       router.cancel();
@@ -173,12 +185,18 @@ final class EditingInput {
     }
 
     // A click (not a drag) on a pin starts click-to-route; with the Wiring tool, anywhere does.
-    if (ForkPreferences.CLICK_ROUTE.isEnabled() && e.getClickCount() == 1) {
+    // A drag from a pin with the Edit tool is a quick connect (auto-routed when it ends on a pin).
+    if (e.getClickCount() == 1) {
       final var start = wiring ? snapped(e)
           : pin != null ? pin
           : PinFinder.nearestConnectable(circuit, at, 6);
-      if (start != null && (wiring || isRouteStart(start))) {
-        hold(e, Pending.ROUTE_START, start);
+      final var route = ForkPreferences.CLICK_ROUTE.isEnabled()
+          && start != null && (wiring || isRouteStart(start));
+      final var quickOk = ForkPreferences.QUICK_CONNECT.isEnabled() && edit && pin != null;
+      if (route || quickOk) {
+        hold(e, Pending.ROUTE_START, route ? start : pin);
+        pendingRoute = route;
+        pendingQuick = quickOk;
         return true;
       }
     }
@@ -222,6 +240,10 @@ final class EditingInput {
   }
 
   boolean mouseDragged(MouseEvent e) {
+    if (quick.isActive()) {
+      quick.drag(Location.create(e.getX(), e.getY(), false), zoom());
+      return true;
+    }
     if (router.isActive()) {
       router.moveCursor(snapped(e));
       return true;
@@ -229,6 +251,14 @@ final class EditingInput {
     if (pending != Pending.NONE) {
       if (pendingPress.getLocationOnScreen().distance(e.getLocationOnScreen()) < DRAG_THRESHOLD) {
         return true; // still a click: ignore the jitter
+      }
+      if (pendingQuick) {
+        final var from = pendingAt;
+        clearPending();
+        hover.clear();
+        quick.begin(from);
+        quick.drag(Location.create(e.getX(), e.getY(), false), zoom());
+        return true;
       }
       // It is a drag after all: hand Logisim the original press, then this drag.
       final var press = pendingPress;
@@ -247,10 +277,21 @@ final class EditingInput {
       swallowRelease = false;
       return true;
     }
+    if (quick.isActive()) {
+      quick.finish();
+      return true;
+    }
     switch (pending) {
       case ROUTE_START -> {
         final var at = pendingAt;
+        final var route = pendingRoute;
+        final var press = pendingPress;
         clearPending();
+        if (!route) {
+          // Held only in case of a quick connect: a plain click goes to Logisim as usual.
+          replay.accept(press);
+          return false;
+        }
         hover.clear();
         router.start(at);
         return true;
@@ -279,6 +320,8 @@ final class EditingInput {
     pendingPress = null;
     pendingAt = null;
     pendingWire = null;
+    pendingRoute = false;
+    pendingQuick = false;
   }
 
   /** Pointer moves with no button down (circuit coordinates). Observes only. */
@@ -310,6 +353,7 @@ final class EditingInput {
 
   void focusLost() {
     hover.clear();
+    quick.cancel();
   }
 
   /** Overlay drawing, in circuit coordinates (called by the canvas painter). */
@@ -319,5 +363,6 @@ final class EditingInput {
     hover.paint(g);
     guides.paint(g);
     router.paint(g);
+    quick.paint(g);
   }
 }

@@ -24,6 +24,7 @@ public final class ForkFlag {
     SELECTION("forkCategorySelection"),
     WIRING("forkCategoryWiring"),
     FEEDBACK("forkCategoryFeedback"),
+    BUILD("forkCategoryBuild"),
     TOOLS("forkCategoryTools");
 
     private final String labelKey;

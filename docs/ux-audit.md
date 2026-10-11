@@ -579,3 +579,19 @@ makes them quicker to reach:
 - The fork's overlays (unconnected markers, net highlight, route preview, guides) use lighter colours
   on dark themes (`ForkColors`). The wire-drawing preview in `WiringTool` now uses the component colour
   instead of black, so it shows on a dark canvas.
+
+### 7.9 Quick build
+
+All under `logisim/fork/builder/`. Each gesture is a single undo step that adds ordinary parts and
+wires, so saved files are unchanged in format.
+
+**Auto-router** (`GridRouter`, `CircuitGrid`): A* over the 10-unit grid, costing length plus a
+penalty per bend. In Logisim a wire end touching a wire or pin connects to it, so the route never
+enters a part (edges included, where pins sit), never touches a pin or wire end, never runs along an
+existing wire and never bends on one. It may cross wires at right angles. The search is limited to
+300 units around the two ends.
+
+| Gesture | Flag | Notes |
+| --- | --- | --- |
+| Edit tool: drag from a pin, release on a pin | `build.quickConnect` | Auto-routed, with a preview; a red ring if unreachable |
+| Edit tool: drag from a pin, release elsewhere | `build.quickConnect` | The usual L-shaped wire; <kbd>Esc</kbd> cancels the drag |
