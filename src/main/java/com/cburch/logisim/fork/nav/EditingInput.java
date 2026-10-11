@@ -13,6 +13,7 @@ import com.cburch.logisim.circuit.Wire;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.builder.BlueprintPlacer;
 import com.cburch.logisim.fork.builder.QuickConnect;
 import com.cburch.logisim.fork.builder.Stamp;
 import com.cburch.logisim.fork.edit.SelectConnected;
@@ -101,6 +102,11 @@ final class EditingInput {
   // --- keys -------------------------------------------------------------------------------
 
   boolean keyPressed(KeyEvent e) {
+    if (BlueprintPlacer.of(canvas) != null && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+      BlueprintPlacer.disarm(canvas);
+      e.consume();
+      return true;
+    }
     if (stamp.isPressed() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
       stamp.cancel();
       clearPending();
@@ -135,6 +141,16 @@ final class EditingInput {
   // --- mouse --------------------------------------------------------------------------------
 
   boolean mousePressed(MouseEvent e) {
+    final var blueprint = BlueprintPlacer.of(canvas);
+    if (blueprint != null) {
+      if (e.getButton() == MouseEvent.BUTTON1) {
+        blueprint.place(canvas, Location.create(e.getX(), e.getY(), false));
+      } else {
+        BlueprintPlacer.disarm(canvas);
+      }
+      swallowRelease = true;
+      return true;
+    }
     if (router.isActive()) {
       if (router.isStale() || !(isEditTool() || isWiringTool())) {
         router.cancel();
@@ -361,6 +377,11 @@ final class EditingInput {
 
   /** Pointer moves with no button down (circuit coordinates). Observes only. */
   void mouseMoved(MouseEvent e) {
+    final var blueprint = BlueprintPlacer.of(canvas);
+    if (blueprint != null) {
+      blueprint.move(canvas, Location.create(e.getX(), e.getY(), false));
+      return;
+    }
     if (router.isActive()) {
       if (router.isStale()) {
         router.cancel();
@@ -404,5 +425,7 @@ final class EditingInput {
     router.paint(g);
     quick.paint(g);
     stamp.paint(g);
+    final var blueprint = BlueprintPlacer.of(canvas);
+    if (blueprint != null) blueprint.paint(g);
   }
 }

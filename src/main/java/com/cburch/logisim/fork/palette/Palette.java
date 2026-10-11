@@ -49,6 +49,7 @@ public final class Palette {
     }
     SearchProviders.register(new CircuitProvider());
     SearchProviders.register(new ActionProvider());
+    SearchProviders.register(new BlueprintProvider());
     PaletteKeys.install();
     // Build each main window's palette shortly after it opens, while the user is still looking.
     Toolkit.getDefaultToolkit().addAWTEventListener(

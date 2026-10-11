@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Minimal JSON reader for {@code keymap.json}, so the fork needs no extra dependency.
+ * Minimal JSON reader for {@code keymap.json} and blueprints, so the fork needs no extra dependency.
  *
  * <p>Produces {@code Map<String, Object>} for objects (keeping key order), {@code List<Object>} for
  * arrays, {@code String}, {@code Double}, {@code Boolean} and {@code null}. Errors throw
  * {@link IllegalArgumentException} with the line and column.
  */
-final class MiniJson {
+public final class MiniJson {
   private final String text;
   private int pos;
 
@@ -29,7 +29,7 @@ final class MiniJson {
     this.text = text;
   }
 
-  static Object parse(String text) {
+  public static Object parse(String text) {
     final var parser = new MiniJson(text);
     parser.skipWhitespace();
     final var value = parser.readValue();
@@ -178,5 +178,69 @@ final class MiniJson {
       }
     }
     return new IllegalArgumentException(message + " at line " + line + ", column " + column);
+  }
+
+  /** Writes maps, lists, strings, numbers, booleans and null as indented JSON. */
+  public static String write(Object value) {
+    final var out = new StringBuilder();
+    write(out, value, "");
+    return out.append('\n').toString();
+  }
+
+  private static void write(StringBuilder out, Object value, String indent) {
+    if (value == null) {
+      out.append("null");
+    } else if (value instanceof String s) {
+      out.append('"');
+      for (final var c : s.toCharArray()) {
+        switch (c) {
+          case '"' -> out.append("\\\"");
+          case '\\' -> out.append("\\\\");
+          case '\n' -> out.append("\\n");
+          case '\r' -> out.append("\\r");
+          case '\t' -> out.append("\\t");
+          default -> {
+            if (c < 0x20) {
+              out.append(String.format("\\u%04x", (int) c));
+            } else {
+              out.append(c);
+            }
+          }
+        }
+      }
+      out.append('"');
+    } else if (value instanceof Number || value instanceof Boolean) {
+      out.append(value);
+    } else if (value instanceof Map<?, ?> map) {
+      if (map.isEmpty()) {
+        out.append("{}");
+        return;
+      }
+      out.append("{\n");
+      var first = true;
+      for (final var e : map.entrySet()) {
+        if (!first) out.append(",\n");
+        first = false;
+        out.append(indent).append("  ");
+        write(out, String.valueOf(e.getKey()), "");
+        out.append(": ");
+        write(out, e.getValue(), indent + "  ");
+      }
+      out.append('\n').append(indent).append('}');
+    } else if (value instanceof List<?> list) {
+      if (list.isEmpty()) {
+        out.append("[]");
+        return;
+      }
+      out.append("[\n");
+      for (var i = 0; i < list.size(); i++) {
+        if (i > 0) out.append(",\n");
+        out.append(indent).append("  ");
+        write(out, list.get(i), indent + "  ");
+      }
+      out.append('\n').append(indent).append(']');
+    } else {
+      throw new IllegalArgumentException("not JSON: " + value.getClass());
+    }
   }
 }

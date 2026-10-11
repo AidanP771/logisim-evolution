@@ -483,7 +483,8 @@ or double <kbd>Shift</kbd>) opens Find Action with the fork's providers (`logisi
 The built-in component and menu providers are swapped for wrappers; with `palette.extended` off they
 behave exactly as before.
 
-- `>` searches only actions (menus and fork commands); `@` searches only circuits.
+- `>` searches only actions (menus and fork commands); `@` searches only circuits; `#` searches only
+  blueprints (see 7.9).
 - A trailing number sets the obvious attribute (`ParameterRule`): `and 3` gives 3 inputs, `mux 4`
   gives 2 select bits, `reg 8` gives 8 bits. A number a part can't take is ignored.
 - Circuits: <kbd>Enter</kbd> opens; <kbd>Shift</kbd>+<kbd>Enter</kbd> arms it as a subcircuit.
@@ -597,6 +598,8 @@ existing wire and never bends on one. It may cross wires at right angles. The se
 | Edit tool: drag from a pin, release elsewhere | `build.quickConnect` | The usual L-shaped wire; <kbd>Esc</kbd> cancels the drag |
 | Part armed: press and drag | `build.stamp` | A row or column of copies, one part plus a grid step apart |
 | <kbd>Menu</kbd>+<kbd>Alt</kbd>+<kbd>W</kbd> on 2+ selected parts | `build.chain` | Output to the next part's first free input |
+| Palette: **Save selection as blueprint…** | `build.blueprints` | Name it; stored as JSON, not in the circuit |
+| Palette: `#name`, then click on the canvas | `build.blueprints` | Ghost follows the pointer; <kbd>Esc</kbd> cancels |
 
 Stamping follows the drag's main axis and shows outlines and a count while dragging. A drag shorter
 than one part is an ordinary placement; <kbd>Esc</kbd> cancels. If the armed part has a label, the
@@ -608,3 +611,10 @@ output to the next part's first input with nothing attached. Each link avoids th
 before it. If any link has no output, no free input or no clear path, nothing is wired and the
 canvas says which parts were the problem. Parts stamped edge to edge leave no room for a wire, so
 space them out first.
+
+Blueprints are JSON files in the fork's config folder under `blueprints/`. Each one stores its parts
+by library and factory name, their offset from the group's top-left grid point, and their attributes
+as Logisim's standard strings, plus the wires. Placing one rebuilds the parts against the current
+project's libraries, the way pasting does. A subcircuit is stored by circuit name and only places in
+a project that has a circuit of that name. If a library is missing, the message names it. Placing a
+circuit inside itself is refused. Nothing about blueprints is written to `.circ` files.

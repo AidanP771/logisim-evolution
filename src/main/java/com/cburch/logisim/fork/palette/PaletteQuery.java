@@ -15,6 +15,7 @@ package com.cburch.logisim.fork.palette;
  * <ul>
  *   <li>{@code >zoom} searches actions only (menus and fork commands).
  *   <li>{@code @adder} searches the project's circuits only.
+ *   <li>{@code #half} searches saved blueprints only.
  *   <li>{@code and 3} searches for "and" and passes 3 as a parameter (3 inputs).
  * </ul>
  *
@@ -27,7 +28,8 @@ public record PaletteQuery(Scope scope, String text, Integer parameter) {
   public enum Scope {
     ALL,
     ACTIONS,
-    CIRCUITS;
+    CIRCUITS,
+    BLUEPRINTS;
 
     public boolean includesActions() {
       return this == ALL || this == ACTIONS;
@@ -53,6 +55,9 @@ public record PaletteQuery(Scope scope, String text, Integer parameter) {
       text = text.substring(1).strip();
     } else if (text.startsWith("@")) {
       scope = Scope.CIRCUITS;
+      text = text.substring(1).strip();
+    } else if (text.startsWith("#")) {
+      scope = Scope.BLUEPRINTS;
       text = text.substring(1).strip();
     }
     Integer parameter = null;
