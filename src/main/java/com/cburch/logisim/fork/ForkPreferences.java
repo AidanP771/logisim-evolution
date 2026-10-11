@@ -118,6 +118,15 @@ public final class ForkPreferences {
     if (old != enabled) SUPPORT.firePropertyChange(flag.getKey(), old, enabled);
   }
 
+  /** A non-flag fork setting (e.g. the appearance mode), stored in the same node. */
+  public static String getValue(String key, String defaultValue) {
+    return getNode().get(key, defaultValue);
+  }
+
+  public static void setValue(String key, String value) {
+    getNode().put(key, value);
+  }
+
   /** Listens for changes to one flag; the event's property name is the flag key. */
   public static void addListener(ForkFlag flag, PropertyChangeListener listener) {
     SUPPORT.addPropertyChangeListener(flag.getKey(), listener);

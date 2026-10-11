@@ -10,6 +10,7 @@
 package com.cburch.logisim.fork.nav;
 
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.gui.Appearance;
 import com.cburch.logisim.fork.keymap.ForkShortcuts;
 import com.cburch.logisim.fork.keymap.TypingGuard;
 import com.cburch.logisim.fork.palette.Palette;
@@ -81,6 +82,7 @@ public final class CanvasNavigator {
     Palette.install();
     Palette.track(canvas.getProject());
     PinchZoom.install(canvas);
+    Appearance.install();
     editing = new EditingInput(canvas, this::replayPress);
     canvas.addFocusListener(
         new FocusAdapter() {

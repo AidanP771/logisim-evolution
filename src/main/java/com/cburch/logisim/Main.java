@@ -9,6 +9,7 @@
 
 package com.cburch.logisim;
 
+import com.cburch.logisim.fork.gui.Appearance;
 import com.cburch.logisim.generated.BuildInfo;
 import com.cburch.logisim.gui.generic.OptionPane;
 import com.cburch.logisim.gui.start.Startup;
@@ -49,6 +50,7 @@ public class Main {
         FlatMacLightLaf.installLafInfo();
         FlatMacDarkLaf.installLafInfo();
 
+        Appearance.beforeStartup(); // Fork UX: Light / Dark / Follow system
         UIManager.setLookAndFeel(AppPreferences.LookAndFeel.get());
         AppPreferences.applyThemeColors();
 

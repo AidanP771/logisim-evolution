@@ -15,6 +15,8 @@ import com.cburch.logisim.fork.ForkFlag;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.gui.prefs.OptionsPanel;
 import com.cburch.logisim.gui.prefs.PreferencesFrame;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -24,15 +26,21 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 /** The "Fork UX" preferences tab: one checkbox per {@link ForkFlag}, grouped by category. */
 public class ForkUxOptions extends OptionsPanel {
   private static final long serialVersionUID = 1L;
 
   private final JLabel intro = new JLabel();
+  private final JLabel appearanceLabel = new JLabel();
+  private final JComboBox<Appearance.Mode> appearance = new JComboBox<>(Appearance.Mode.values());
   private final Map<ForkFlag.Category, JLabel> categoryLabels = new EnumMap<>(ForkFlag.Category.class);
   private final List<FlagRow> rows = new ArrayList<>();
 
@@ -50,6 +58,30 @@ public class ForkUxOptions extends OptionsPanel {
     gbc.weightx = 1.0;
     gbc.insets = new Insets(0, 0, 8, 0);
     add(intro, gbc);
+
+    final var appearanceRow = new JPanel(new FlowLayout(FlowLayout.LEADING, 6, 0));
+    appearanceRow.add(appearanceLabel);
+    appearanceRow.add(appearance);
+    appearance.setSelectedItem(Appearance.getMode());
+    appearance.setRenderer(
+        new DefaultListCellRenderer() {
+          @Override
+          public Component getListCellRendererComponent(
+              JList<?> list, Object value, int index, boolean selected, boolean focus) {
+            final var text = value instanceof Appearance.Mode m ? modeLabel(m) : "";
+            return super.getListCellRendererComponent(list, text, index, selected, focus);
+          }
+        });
+    appearance.addActionListener(e -> {
+      final var mode = (Appearance.Mode) appearance.getSelectedItem();
+      if (mode != null && mode != Appearance.getMode()) {
+        // After this event: switching theme rebuilds this combo's UI.
+        SwingUtilities.invokeLater(() -> Appearance.setMode(mode));
+      }
+    });
+    gbc.gridy++;
+    gbc.insets = new Insets(0, 0, 4, 0);
+    add(appearanceRow, gbc);
 
     ForkFlag.Category current = null;
     for (final var flag : ForkPreferences.getFlags()) {
@@ -86,6 +118,22 @@ public class ForkUxOptions extends OptionsPanel {
     localeChanged();
   }
 
+  private static String modeLabel(Appearance.Mode mode) {
+    return switch (mode) {
+      case LIGHT -> S.get("forkAppearanceLight");
+      case DARK -> S.get("forkAppearanceDark");
+      case SYSTEM -> S.get("forkAppearanceSystem");
+      default -> S.get("forkAppearanceManual");
+    };
+  }
+
+  /** The mode can change from the keymap or palette while this tab is open. */
+  @Override
+  public void addNotify() {
+    super.addNotify();
+    appearance.setSelectedItem(Appearance.getMode());
+  }
+
   @Override
   public String getHelpText() {
     return S.get("forkUxHelp");
@@ -99,6 +147,8 @@ public class ForkUxOptions extends OptionsPanel {
   @Override
   public void localeChanged() {
     intro.setText(S.get("forkUxIntro"));
+    appearanceLabel.setText(S.get("forkAppearanceLabel"));
+    appearance.repaint();
     for (final var entry : categoryLabels.entrySet()) {
       entry.getValue().setText(entry.getKey().getLabel());
     }

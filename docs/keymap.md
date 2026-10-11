@@ -56,6 +56,7 @@ cheat sheet but can't be rebound.
 | `view.fit` | Fit the circuit in the window | `F` |
 | `view.fitSelection` | Fit the selection in the window | `Shift+F` |
 | `view.resetZoom` | Reset zoom to 100% | `Mod+0`, `Mod+Numpad0` |
+| `view.darkMode` | Toggle dark mode | `Mod+Alt+D` |
 
 ### Navigate
 

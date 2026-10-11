@@ -12,6 +12,7 @@ package com.cburch.logisim.fork.keymap;
 import com.cburch.logisim.fork.ForkFlag;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.edit.EditActions;
+import com.cburch.logisim.fork.gui.Appearance;
 import com.cburch.logisim.fork.keymap.ForkAction.Category;
 import com.cburch.logisim.fork.keymap.ForkAction.Scope;
 import com.cburch.logisim.fork.nav.ViewActions;
@@ -85,6 +86,8 @@ public final class ForkActions {
     info("view.panMiddle", Category.VIEW, ForkPreferences.MIDDLE_PAN,
         "Middle-drag", "Mod + drag");
     info("view.zoomWheel", Category.VIEW, ForkPreferences.ZOOM_TO_CURSOR, "Mod + scroll", "Pinch");
+    register("view.darkMode", Category.VIEW, Scope.WINDOW, null, List.of("Mod+Alt+D"), ALWAYS,
+        ctx -> Appearance.toggle());
 
     // --- Navigate ---------------------------------------------------------------------------
     canvas("nav.parent", Category.NAVIGATE, ForkPreferences.BACK_TO_PARENT, List.of("Alt+Up"),

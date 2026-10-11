@@ -561,3 +561,21 @@ The path bar accepts absolute paths, paths relative to the shown folder, `~` for
 and the quotes that Windows "Copy as path" adds. A missing path beeps and outlines the field. All
 Logisim file dialogs go through `JFileChoosers.LogisimFileChooser`, so it appears in every one of
 them. The native macOS dialog already accepts a typed path (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>).
+
+### 7.8 Appearance
+
+Dark themes were already built in (Preferences, Window tab) and already switched live there. The fork
+makes them quicker to reach:
+
+- <kbd>Menu</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd> (`view.darkMode`, also in the palette) toggles light and
+  dark. The **Appearance** selector on the Fork UX tab offers Light, Dark, Follow system, or the theme
+  chosen on the Window tab (the default, which changes nothing).
+- Light and Dark switch to the partner of the current theme: IntelliJ and Darcula, Light and Dark,
+  macOS Light and macOS Dark. Other themes fall back to Darcula, or macOS Dark on a Mac.
+- Follow system reads the OS setting (`defaults` on macOS, the registry on Windows, `gsettings` on
+  Linux) before the first window opens and again whenever a main window is activated.
+- Switching applies the theme's canvas colours (`AppPreferences.applyThemeColors`), exactly as the
+  Window tab does, so custom canvas colours are reset.
+- The fork's overlays (unconnected markers, net highlight, route preview, guides) use lighter colours
+  on dark themes (`ForkColors`). The wire-drawing preview in `WiringTool` now uses the component colour
+  instead of black, so it shows on a dark canvas.
