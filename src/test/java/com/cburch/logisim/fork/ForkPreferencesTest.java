@@ -38,9 +38,11 @@ public class ForkPreferencesTest {
   }
 
   @Test
-  public void everyFlagDefaultsToOn() {
+  public void everyFlagDefaultsToOnExceptTheSwingDialogOnMac() {
     for (final var flag : ForkPreferences.getFlags()) {
-      assertTrue(flag.isEnabled(), flag.getKey());
+      final var expected = flag != ForkPreferences.SWING_DIALOG_ON_MAC;
+      assertEquals(expected, flag.isEnabled(), flag.getKey());
+      assertEquals(expected, flag.getDefault(), flag.getKey());
     }
   }
 

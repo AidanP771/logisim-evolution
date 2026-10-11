@@ -9,6 +9,8 @@
 
 package com.cburch.logisim.util;
 
+import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.gui.PathBar;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.prefs.PrefMonitor;
 import com.cburch.logisim.proj.Projects;
@@ -76,8 +78,16 @@ public final class JFileChoosers {
       return super.getSelectedFile();
     }
 
+    @Override
+    protected javax.swing.JDialog createDialog(java.awt.Component parent) {
+      final var dialog = super.createDialog(parent);
+      if (ForkPreferences.PATH_BAR.isEnabled()) PathBar.install(this, dialog);
+      return dialog;
+    }
+
     private boolean shouldUseMacNativeDialog() {
       if (!MacCompatibility.isRunningOnMac()) return false;
+      if (ForkPreferences.SWING_DIALOG_ON_MAC.isEnabled()) return false;
       // Fall back to Swing when multiple format-selection filters
       final var choosable = getChoosableFileFilters();
       final boolean hasAcceptAll = isAcceptAllFileFilterUsed();

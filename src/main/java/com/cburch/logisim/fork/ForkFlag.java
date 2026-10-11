@@ -41,12 +41,20 @@ public final class ForkFlag {
   private final Category category;
   private final String labelKey;
   private final String descriptionKey;
+  private final boolean defaultValue;
 
-  ForkFlag(String key, Category category, String labelKey, String descriptionKey) {
+  ForkFlag(String key, Category category, String labelKey, String descriptionKey,
+      boolean defaultValue) {
     this.key = key;
     this.category = category;
     this.labelKey = labelKey;
     this.descriptionKey = descriptionKey;
+    this.defaultValue = defaultValue;
+  }
+
+  /** Value used until the user changes it; on for nearly every flag. */
+  public boolean getDefault() {
+    return defaultValue;
   }
 
   /** Preference key, also used as the flag's stable identifier. */

@@ -545,6 +545,13 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
 | Feature | Flag | Class |
 | --- | --- | --- |
 | Analyzer: icon button beside **Export TeX** copies the LaTeX to the clipboard | `analyzer.copyTex` | `CopyLatexButton` |
+| File dialogs: **Go to** path field; Enter opens a folder or file; <kbd>Menu</kbd>+<kbd>L</kbd> | `ui.pathBar` | `PathBar` |
+| macOS: Logisim's file dialog (with path bar) instead of the native one; **off** by default | `ui.swingFileDialogOnMac` | — |
 
 `AnalyzerTexWriter.toTex` and `doSave` share one writer, so the copied text and the exported file are
 identical. This is analyzer export, not .circ file I/O.
+
+The path bar accepts absolute paths, paths relative to the shown folder, `~` for the home folder,
+and the quotes that Windows "Copy as path" adds. A missing path beeps and outlines the field. All
+Logisim file dialogs go through `JFileChoosers.LogisimFileChooser`, so it appears in every one of
+them. The native macOS dialog already accepts a typed path (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>).

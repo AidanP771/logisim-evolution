@@ -72,12 +72,21 @@ public final class ForkPreferences {
   public static final ForkFlag STATUS_HINTS = flag("ui.statusHints", Category.FEEDBACK, "StatusHints");
 
   public static final ForkFlag COPY_TEX = flag("analyzer.copyTex", Category.TOOLS, "CopyTex");
+  public static final ForkFlag PATH_BAR = flag("ui.pathBar", Category.TOOLS, "PathBar");
+  /** Off by default: the native macOS dialog already takes typed paths (Cmd+Shift+G). */
+  public static final ForkFlag SWING_DIALOG_ON_MAC =
+      flag("ui.swingFileDialogOnMac", Category.TOOLS, "SwingDialogOnMac", false);
 
   private ForkPreferences() {}
 
   private static ForkFlag flag(String key, Category category, String stringSuffix) {
-    final var flag =
-        new ForkFlag(key, category, "forkFlag" + stringSuffix, "forkFlag" + stringSuffix + "Desc");
+    return flag(key, category, stringSuffix, true);
+  }
+
+  private static ForkFlag flag(
+      String key, Category category, String stringSuffix, boolean defaultValue) {
+    final var flag = new ForkFlag(key, category, "forkFlag" + stringSuffix,
+        "forkFlag" + stringSuffix + "Desc", defaultValue);
     FLAGS.add(flag);
     return flag;
   }
@@ -98,7 +107,7 @@ public final class ForkPreferences {
   }
 
   static boolean isEnabled(ForkFlag flag) {
-    return getNode().getBoolean(flag.getKey(), true);
+    return getNode().getBoolean(flag.getKey(), flag.getDefault());
   }
 
   static void setEnabled(ForkFlag flag, boolean enabled) {
