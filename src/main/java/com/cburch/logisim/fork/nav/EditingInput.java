@@ -14,6 +14,7 @@ import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.fork.ForkPreferences;
 import com.cburch.logisim.fork.builder.QuickConnect;
+import com.cburch.logisim.fork.builder.Stamp;
 import com.cburch.logisim.fork.edit.SelectConnected;
 import com.cburch.logisim.fork.edit.SnapGuides;
 import com.cburch.logisim.fork.keymap.ForkShortcuts;
@@ -22,6 +23,7 @@ import com.cburch.logisim.fork.wiring.PinFinder;
 import com.cburch.logisim.fork.wiring.WireActions;
 import com.cburch.logisim.fork.wiring.WireRouter;
 import com.cburch.logisim.gui.main.Canvas;
+import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.EditTool;
 import com.cburch.logisim.tools.WiringTool;
 import java.awt.Cursor;
@@ -46,7 +48,7 @@ final class EditingInput {
   private static final int DRAG_THRESHOLD = 4;
   private static final Cursor PIN_CURSOR = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
 
-  private enum Pending { NONE, ROUTE_START, SEGMENT_DELETE }
+  private enum Pending { NONE, ROUTE_START, SEGMENT_DELETE, STAMP }
 
   private final Canvas canvas;
   private final Consumer<MouseEvent> replay;
@@ -54,6 +56,7 @@ final class EditingInput {
   private final NetHover hover;
   private final SnapGuides guides;
   private final QuickConnect quick;
+  private final Stamp stamp;
 
   private Pending pending = Pending.NONE;
   private MouseEvent pendingPress;
@@ -73,6 +76,7 @@ final class EditingInput {
     this.hover = new NetHover(canvas);
     this.guides = new SnapGuides(canvas);
     this.quick = new QuickConnect(canvas);
+    this.stamp = new Stamp(canvas);
     // While routing, Esc/Space/Backspace/Enter/"/" belong to the router, not to keymap shortcuts.
     ForkShortcuts.setModal(canvas, e -> router.isActive() && WireRouter.isRouteKey(e));
   }
@@ -97,6 +101,13 @@ final class EditingInput {
   // --- keys -------------------------------------------------------------------------------
 
   boolean keyPressed(KeyEvent e) {
+    if (stamp.isPressed() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+      stamp.cancel();
+      clearPending();
+      swallowRelease = true;
+      e.consume();
+      return true;
+    }
     if (quick.isActive() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
       quick.cancel();
       swallowRelease = true;
@@ -138,6 +149,14 @@ final class EditingInput {
       }
     }
     if (e.getButton() != MouseEvent.BUTTON1) return false;
+    // A part armed: a drag may stamp a row of copies (a click still places one, as usual).
+    if (canvas.getProject().getTool() instanceof AddTool add && ForkPreferences.STAMP.isEnabled()
+        && e.getClickCount() == 1 && (e.getModifiersEx() & CanvasNavigator.MODIFIERS) == 0
+        && canvas.getCircuit() != null) {
+      stamp.press(add, Location.create(e.getX(), e.getY(), false));
+      hold(e, Pending.STAMP, Location.create(e.getX(), e.getY(), false));
+      return true;
+    }
     final var edit = isEditTool();
     final var wiring = isWiringTool();
     if (!edit && !wiring) return false;
@@ -248,6 +267,10 @@ final class EditingInput {
       router.moveCursor(snapped(e));
       return true;
     }
+    if (pending == Pending.STAMP) {
+      stamp.drag(Location.create(e.getX(), e.getY(), false));
+      return true;
+    }
     if (pending != Pending.NONE) {
       if (pendingPress.getLocationOnScreen().distance(e.getLocationOnScreen()) < DRAG_THRESHOLD) {
         return true; // still a click: ignore the jitter
@@ -282,6 +305,18 @@ final class EditingInput {
       return true;
     }
     switch (pending) {
+      case STAMP -> {
+        final var press = pendingPress;
+        clearPending();
+        if (stamp.isStamping()) {
+          stamp.place();
+          return true;
+        }
+        // Not dragged far enough for a second copy: an ordinary placement.
+        stamp.cancel();
+        replay.accept(press);
+        return false;
+      }
       case ROUTE_START -> {
         final var at = pendingAt;
         final var route = pendingRoute;
@@ -354,6 +389,10 @@ final class EditingInput {
   void focusLost() {
     hover.clear();
     quick.cancel();
+    if (pending == Pending.STAMP) {
+      stamp.cancel();
+      clearPending();
+    }
   }
 
   /** Overlay drawing, in circuit coordinates (called by the canvas painter). */
@@ -364,5 +403,6 @@ final class EditingInput {
     guides.paint(g);
     router.paint(g);
     quick.paint(g);
+    stamp.paint(g);
   }
 }
