@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Logisim-evolution Fork: UX Improvement Plan
 
 Personal fork of [logisim-evolution](https://github.com/logisim-evolution/logisim-evolution) focused on wiring, editing, keyboard shortcuts, and navigation. The simulator and file format are left alone.
@@ -8,13 +10,13 @@ Drop this file in the repo root. Work through it one phase per Claude Code sessi
 
 ## 1. Goals and hard constraints
 
-**Goals**
+### Goals
 
 - Faster, less fiddly wiring and component placement.
 - Keyboard-first workflow: place, switch tools, and navigate without the mouse menus.
 - Every new behaviour can be turned off, so a bad feature never blocks real work.
 
-**Hard constraints (apply to every phase)**
+### Hard constraints (apply to every phase)
 
 1. **No changes to file I/O.** Do not modify the .circ reader/writer or add new elements/attributes to saved files. Any new settings go in a separate user config file.
 2. **No changes to simulation.** Propagation, values, clocks, and component behaviour stay identical.
