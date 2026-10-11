@@ -20,7 +20,7 @@ class PrefMonitorInt extends AbstractPrefMonitor<Integer> {
   private final int dflt;
 
   /** Current integer value of this preference monitor. */
-  private int value;
+  private volatile int value;
 
   /**
    * Constructs a new preference monitor for integer values.
@@ -31,9 +31,8 @@ class PrefMonitorInt extends AbstractPrefMonitor<Integer> {
   public PrefMonitorInt(String name, int dflt) {
     super(name);
     this.dflt = dflt;
-    this.value = dflt;
     final var prefs = AppPreferences.getPrefs();
-    set(prefs.getInt(name, dflt));
+    this.value = prefs.getInt(name, dflt);
     prefs.addPreferenceChangeListener(this);
   }
 
@@ -57,12 +56,16 @@ class PrefMonitorInt extends AbstractPrefMonitor<Integer> {
     final var prop = event.getKey();
     final var name = getIdentifier();
     if (prop.equals(name)) {
-      final var oldValue = value;
-      final var newValue = prefs.getInt(name, dflt);
-      if (newValue != oldValue) {
+      final int oldValue;
+      final int newValue;
+      // Same lock as set(): a late event can't revert a newer value (see PrefMonitorString).
+      synchronized (this) {
+        oldValue = value;
+        newValue = prefs.getInt(name, dflt);
+        if (newValue == oldValue) return;
         value = newValue;
-        AppPreferences.firePropertyChange(name, oldValue, newValue);
       }
+      AppPreferences.firePropertyChange(name, oldValue, newValue);
     }
   }
 
@@ -73,9 +76,15 @@ class PrefMonitorInt extends AbstractPrefMonitor<Integer> {
    * @param newValue The new integer value to set.
    */
   public void set(Integer newValue) {
-    final var newVal = newValue;
-    if (value != newVal) {
-      AppPreferences.getPrefs().putInt(getIdentifier(), newVal);
+    // The value changes at once, not when the preferences thread gets round to it, so code that
+    // sets and then reads (applyThemeColors) sees the new value.
+    final int oldValue;
+    synchronized (this) {
+      oldValue = value;
+      if (oldValue == newValue) return;
+      AppPreferences.getPrefs().putInt(getIdentifier(), newValue);
+      value = newValue;
     }
+    AppPreferences.firePropertyChange(getIdentifier(), oldValue, (int) newValue);
   }
 }
