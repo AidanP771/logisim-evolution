@@ -542,7 +542,9 @@ distribute check pin-to-pin connectivity and undo themselves if parts would land
 - **Installers:** the `Fork installers` workflow (`.github/workflows/fork-release.yml`) builds them on
   GitHub for Windows (MSI and portable ZIP), macOS (DMG, Apple Silicon and Intel) and Linux (DEB, RPM,
   x86_64 and arm64), after running the tests on all three. Run it from the Actions tab, or push a
-  `fork-v*` tag to get a draft release. Locally: `./gradlew createDmg`, `createMsi` or `createDeb` on
+  `fork-v*` tag to get a draft release. Each successful push to `ux-fork` also refreshes the
+  `fork-latest` release (tag moved to that commit, files replaced), which the README links to.
+  Locally: `./gradlew createDmg`, `createMsi` or `createDeb` on
   the matching system. Installers use the `forkInstaller` id from `gradle.properties` (their own
   name, bundle id and Windows upgrade code), so they install alongside stock Logisim-evolution. The
   project name is unchanged, because saved files mention it.

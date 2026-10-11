@@ -2,6 +2,13 @@
 
 ---
 
+> **UX fork:** this is a personal fork focused on wiring, editing, shortcuts and navigation.
+> **[Download the latest fork build](https://github.com/AidanP771/logisim-evolution/releases/tag/fork-latest)**
+> (Windows, macOS and Linux installers). It installs alongside the stock Logisim-evolution.
+> What changed: [docs/ux-audit.md](docs/ux-audit.md#7-fork-changes).
+
+---
+
 # Logisim-evolution #
 
 * **Table of contents**
