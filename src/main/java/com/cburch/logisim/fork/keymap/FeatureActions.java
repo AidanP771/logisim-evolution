@@ -10,6 +10,7 @@
 package com.cburch.logisim.fork.keymap;
 
 import com.cburch.logisim.fork.ForkPreferences;
+import com.cburch.logisim.fork.builder.ChainWiring;
 import com.cburch.logisim.fork.edit.ArrangeActions;
 import com.cburch.logisim.fork.edit.ArrangeActions.Edge;
 import com.cburch.logisim.fork.gui.CheatSheet;
@@ -72,6 +73,9 @@ final class FeatureActions {
         ForkPreferences.SEGMENT_DELETE, List.of("Alt + click a wire"), ctx -> true, null);
     ForkActions.register("wire.cleanup", Category.WIRING, Scope.CANVAS, ForkPreferences.WIRE_CLEANUP,
         List.of(), ctx -> true, WireActions::cleanUp);
+    ForkActions.register("build.chain", Category.WIRING, Scope.CANVAS, ForkPreferences.CHAIN,
+        List.of("Mod+Alt+W"), ctx -> ChainWiring.canChain(ctx.canvas()),
+        ctx -> ChainWiring.chain(ctx.canvas(), ctx.project()));
     ForkActions.register("view.toggleUnconnected", Category.WIRING, Scope.CANVAS, null, List.of("U"),
         ctx -> true, ctx -> {
           final var flag = ForkPreferences.SHOW_UNCONNECTED;

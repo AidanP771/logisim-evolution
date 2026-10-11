@@ -596,8 +596,15 @@ existing wire and never bends on one. It may cross wires at right angles. The se
 | Edit tool: drag from a pin, release on a pin | `build.quickConnect` | Auto-routed, with a preview; a red ring if unreachable |
 | Edit tool: drag from a pin, release elsewhere | `build.quickConnect` | The usual L-shaped wire; <kbd>Esc</kbd> cancels the drag |
 | Part armed: press and drag | `build.stamp` | A row or column of copies, one part plus a grid step apart |
+| <kbd>Menu</kbd>+<kbd>Alt</kbd>+<kbd>W</kbd> on 2+ selected parts | `build.chain` | Output to the next part's first free input |
 
 Stamping follows the drag's main axis and shows outlines and a count while dragging. A drag shorter
 than one part is an ordinary placement; <kbd>Esc</kbd> cancels. If the armed part has a label, the
 copies continue it (A, B, C; X0, X1; Z, AA), and the armed tool carries on from the next one.
 Copies that would overlap a part or go above or left of the origin are refused with a message.
+
+Chain wiring orders the selected parts by left edge, then top edge, and routes each part's first
+output to the next part's first input with nothing attached. Each link avoids the links planned
+before it. If any link has no output, no free input or no clear path, nothing is wired and the
+canvas says which parts were the problem. Parts stamped edge to edge leave no room for a wire, so
+space them out first.

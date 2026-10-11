@@ -68,20 +68,21 @@ public final class CircuitGrid implements GridRouter.Grid {
         blocked.add(key(end.getLocation().getX(), end.getLocation().getY()));
       }
     }
-    for (final var w : wires) {
-      final Location e0 = w.getEnd0();
-      final Location e1 = w.getEnd1();
-      blocked.add(key(e0.getX(), e0.getY()));
-      blocked.add(key(e1.getX(), e1.getY()));
-      if (w.isVertical()) {
-        final var lo = Math.max(Math.min(e0.getY(), e1.getY()), this.minY);
-        final var hi = Math.min(Math.max(e0.getY(), e1.getY()), maxY);
-        for (var y = ceil(lo); y <= hi; y += GridRouter.STEP) vertical.add(key(e0.getX(), y));
-      } else {
-        final var lo = Math.max(Math.min(e0.getX(), e1.getX()), this.minX);
-        final var hi = Math.min(Math.max(e0.getX(), e1.getX()), maxX);
-        for (var x = ceil(lo); x <= hi; x += GridRouter.STEP) horizontal.add(key(x, e0.getY()));
-      }
+    for (final var w : wires) addWire(w.getEnd0(), w.getEnd1());
+  }
+
+  /** Records a wire from {@code e0} to {@code e1}, existing or only planned (e.g. a chain). */
+  public void addWire(Location e0, Location e1) {
+    blocked.add(key(e0.getX(), e0.getY()));
+    blocked.add(key(e1.getX(), e1.getY()));
+    if (e0.getX() == e1.getX()) {
+      final var lo = Math.max(Math.min(e0.getY(), e1.getY()), minY);
+      final var hi = Math.min(Math.max(e0.getY(), e1.getY()), maxY);
+      for (var y = ceil(lo); y <= hi; y += GridRouter.STEP) vertical.add(key(e0.getX(), y));
+    } else {
+      final var lo = Math.max(Math.min(e0.getX(), e1.getX()), minX);
+      final var hi = Math.min(Math.max(e0.getX(), e1.getX()), maxX);
+      for (var x = ceil(lo); x <= hi; x += GridRouter.STEP) horizontal.add(key(x, e0.getY()));
     }
   }
 

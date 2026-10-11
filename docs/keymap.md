@@ -116,6 +116,7 @@ cheat sheet but can't be rebound.
 | --- | --- | --- |
 | `wire.cleanup` | Clean up wires (remove dangling stubs) | — |
 | `view.toggleUnconnected` | Show or hide unconnected markers | `U` |
+| `build.chain` | Chain selected parts | `Mod+Alt+W` |
 
 ### Help
 
